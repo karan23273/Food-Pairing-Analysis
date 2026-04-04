@@ -1,0 +1,2482 @@
+=== Cell 0 (code) ===
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+=== Cell 1 (markdown) ===
+### **Df_1**
+
+=== Cell 2 (code) ===
+df1 = pd.read_csv('RecipeDB1_general.csv')
+df1.head()
+
+
+=== Cell 3 (code) ===
+print(df1.info())
+df1.describe()
+
+=== Cell 4 (code) ===
+df1.drop(columns=['Calories', 'cook_time', 'prep_time', 'servings', 'Recipe_title', 'total_time', 'url', 'img_url', 'Carbohydrate, by difference (g)', 'Energy (kcal)', 'Protein (g)', 'Total lipid (fat) (g)', 'Utensils', 'Processes', 'vegan', 'pescetarian', 'ovo_vegetarian', 'lacto_vegetarian', 'ovo_lacto_vegetarian', 'Source'], inplace=True)
+df1.drop_duplicates(inplace=True)
+
+=== Cell 5 (code) ===
+df1.isnull().sum()
+
+=== Cell 6 (code) ===
+df1.head()
+
+=== Cell 7 (code) ===
+print("cusisines: ", df1['Region'].unique().tolist())
+print("Sub-regions: ", df1['Sub_region'].unique().tolist())
+print("Continents: ", df1['Continent'].unique().tolist())
+
+=== Cell 8 (markdown) ===
+### **Df_2**
+
+=== Cell 9 (code) ===
+df2 = pd.read_csv('RecipeDB1_ingredient_flavor.csv')
+df2.head()
+
+=== Cell 10 (markdown) ===
+#### Not dropping Flavor_DB_Link
+- It contain generic name as well
+
+=== Cell 11 (code) ===
+df2.drop(columns=['frequency', 'wikilink', 'wikiimage','flavordb_id', 'Diet_rx_link','FlavorDB_Category'], inplace=True)
+df2.drop_duplicates(inplace=True)
+
+=== Cell 12 (code) ===
+print(df2.info())
+df2.describe()
+
+=== Cell 13 (code) ===
+df2.isnull().sum()
+
+=== Cell 14 (code) ===
+df2[df2['generic_name'].isna()]
+
+=== Cell 15 (markdown) ===
+- ##### **Using flavor db link name for missing value in generic name**
+
+=== Cell 16 (code) ===
+# cant delete these rows as they are important for the recipe and we can find the generic name for them
+df2[df2['generic_name'].isna()]
+df2.loc[3134, 'generic_name'] = 'Vanilla'
+df2.loc[3384, 'generic_name'] = 'Pepper'
+df2.loc[7224, 'generic_name'] = 'Alcohol'
+
+=== Cell 17 (code) ===
+print("Ingredients:", sorted(df2['ingredient'].unique().tolist()), "\nCount:", len(df2['ingredient'].unique()))
+print("Generic names:", sorted(df2['generic_name'].unique().tolist()), "\nCount:", len(df2['generic_name'].unique()))
+print("Category types:", sorted(df2['Dietrx_Category'].unique().tolist()), "\nCount:", len(df2['Dietrx_Category'].unique()))
+
+=== Cell 18 (code) ===
+df2.isnull().sum()
+
+=== Cell 19 (code) ===
+# Normalize generic_name early to avoid case/space mismatches
+df2["generic_name"] = (
+    df2["generic_name"]
+    .astype("string")
+    .str.replace(r"^[\s\u00A0]+|[\s\u00A0]+$", "", regex=True)
+    .str.lower()
+ )
+
+=== Cell 20 (code) ===
+df2.head()
+
+=== Cell 21 (code) ===
+print("Ingredients:", sorted(df2['ingredient'].unique().tolist()))
+print("Generic names:", sorted(df2['generic_name'].unique().tolist()))
+print("Category types:", sorted(df2['Dietrx_Category'].unique().tolist()))
+
+
+
+=== Cell 22 (markdown) ===
+- ##### **Using flavor db link name for noisy value in generic name**
+
+=== Cell 23 (markdown) ===
+1. Removing generic name with noise link
+
+=== Cell 24 (code) ===
+# Fix noisy generic_name values that contain links
+noise_mask = df2["generic_name"].str.contains("http", case=False, na=False)
+df2.loc[noise_mask, "generic_name"] = (
+    df2.loc[noise_mask, "Flavor_DB_Link"]
+    .astype("string")
+    .str.split("~")
+    .str[0]
+    .str.strip()
+    .str.lower()
+ )
+
+df2.loc[noise_mask, ["generic_name", "Flavor_DB_Link"]].head()
+
+=== Cell 25 (code) ===
+df2.loc[562, 'generic_name'] = 'Cheese'
+
+
+=== Cell 26 (markdown) ===
+2. Typo errors eg. Alfafa and Alfalfa to same name
+
+=== Cell 27 (code) ===
+print(df2[df2["generic_name"] == "alfalfa"])
+
+typo_map = {
+    "asofoetida": "asafoetida",
+    "atlantic croacker": "fish",
+    "augerbine": "aubergine",
+    "avocardo": "avocado",
+    "barlett pear": "pear",
+    "beaf gravy": "beef gravy",
+    "biscut crumb": "biscuit crumb",
+    "blue ceese": "blue cheese",
+    "blue chesse": "blue cheese",
+    "brerad": "bread",
+    "brocolli": "broccoli",
+    "buuter cake": "butter cake",
+    "cheery pepper": "cherry pepper",
+    "chery pepper": "cherry pepper",
+    "chile con quesco": "chile con queso",
+    "chocolate cooky": "biscuit",
+    # "chocolate wafer cooky": "chocolate wafer cookie",
+    "deer meet": "deer meat",
+    "drak chocolate": "dark chocolate",
+    "enchliada": "enchilada",
+    "jalepeno": "jalapeno",
+    "jello-o": "Gello",
+    "lavendar": "lavender",
+    "leave": "leaf",
+    "lingoberry": "lingonberry",
+    "macroni": "macaroni",
+    "mandarian orangre peel": "orange peel",
+    "maria cooky": "maria cookie",
+    "mozzarrella": "mozzarella",
+    "mung brean": "mung bean",
+    "muskmallo": "muskmelon",
+    "oyester": "oyster",
+    "patry": "pastry",
+    "roasted beaf": "roasted beef",
+    "rotell": "pasta",  # or "rotini" depending on context
+    "salad dcressing": "salad dressing",
+    "salad dressong": "salad dressing",
+    "seasoend salt": "seasoned salt",
+    "spioce mix": "spice mix",
+    "spixe mix": "spice mix",
+    "tamarind extraxt": "tamarind extract",
+    "vanilla extraxt": "vanilla extract",
+    "vension": "venison",
+}
+
+df2["generic_name"] = df2["generic_name"].replace(typo_map)
+
+=== Cell 28 (code) ===
+df2.loc[4195, 'generic_name'] = 'Alfalfa'
+
+
+=== Cell 29 (markdown) ===
+3. Cancolizing all Beef part to Beef
+
+=== Cell 30 (code) ===
+# print(df2.loc[
+#     df2["generic_name"].str.contains("beef", case=False, na=False)
+#     ,["IngID", "generic_name", "ingredient"]
+# ])
+print(df2.loc[df2["generic_name"].str.contains("beef", case=False, na=False), "generic_name"].unique().tolist())
+raw_beef = [
+    "Beef",
+    "Beef Steak",
+    "Beef Brisket",
+    "Beef Tenderloin",
+    "Beef Sirloin",
+    "Beef Shank",
+    "Beef Oxtail",
+    "Beef Tongue",
+    "Beef Round",
+    "Beef Skirt Steak",
+    "Beef Rib Eye Roast",
+    "Beef Tri Tip",
+    "Beef Silverside",
+    "Beef Spare Ribs",
+    "Beef Ribs",
+    "Beef blade steak",
+    "Beef heart",
+    "Beef Top",
+    "Beef Tripe",
+    "Stew Beef",
+    "Beef Stew Meat",
+    "Ground Beef",
+    "Ground beef",
+    "Shredded Beef"
+]
+for beef in raw_beef:
+    # df2.loc[df2["generic_name"].str.contains(beef, case=False, na=False), "generic_name"] = "Beef"
+    df2.loc[df2["generic_name"].str.lower() == beef.lower(), "generic_name"] = "Beef"
+
+df2.loc[df2["generic_name"].str.lower() == "venison", "generic_name"] = "Deer Meat"
+
+=== Cell 31 (markdown) ===
+4. Canacolizing all type chicken to chicken
+
+=== Cell 32 (code) ===
+print(df2.loc[df2["generic_name"].str.contains("chicken", case=False, na=False), "generic_name"].unique().tolist())
+raw_chicken = [
+    'chicken',
+    'chicken leg',
+    'chicken liver',
+    'stew chicken',
+    'white meat chicken'
+]
+for chicken in raw_chicken:
+    # df2.loc[df2["generic_name"].str.contains(chicken, case=False, na=False), "generic_name"] = "Chicken"
+    df2.loc[df2["generic_name"].str.lower() == chicken.lower(), "generic_name"] = "Chicken"
+
+=== Cell 33 (markdown) ===
+5. Canacolizing all type cheese to cheese
+
+=== Cell 34 (code) ===
+all_cheese = df2.loc[df2["generic_name"].str.contains("cheese", case=False, na=False), "generic_name"].unique().tolist()
+print(all_cheese)
+for cheese in all_cheese:
+    # df2.loc[df2["generic_name"].str.contains(cheese, case=False, na=False), "generic_name"] = "Cheese"
+    df2.loc[df2["generic_name"].str.lower() == cheese.lower(), "generic_name"] = "Cheese"
+
+
+=== Cell 35 (markdown) ===
+6. Canacolizing all type mushroom to mushroom
+
+=== Cell 36 (code) ===
+all_mushroom = df2.loc[df2["generic_name"].str.contains("mushroom", case=False, na=False), "generic_name"].unique().tolist()
+print(all_mushroom)
+for mushroom in all_mushroom:
+    # df2.loc[df2["generic_name"].str.contains(mushroom, case=False, na=False), "generic_name"] = "Mushroom"
+    df2.loc[df2["generic_name"].str.lower() == mushroom.lower(), "generic_name"] = "Mushroom"
+
+=== Cell 37 (markdown) ===
+7. Canacolizing all type pasta and noodle to pasta and noodle
+
+=== Cell 38 (code) ===
+all_pasta = df2.loc[df2["generic_name"].str.contains("pasta", case=False, na=False), "generic_name"].unique().tolist()
+print(all_pasta)
+all_noodle = df2.loc[df2["generic_name"].str.contains("noodle", case=False, na=False), "generic_name"].unique().tolist()
+print(all_noodle)
+for pasta in all_pasta:
+    # df2.loc[df2["generic_name"].str.contains(pasta, case=False, na=False), "generic_name"] = "Pasta"
+    df2.loc[df2["generic_name"].str.lower() == pasta.lower(), "generic_name"] = "Pasta"
+
+for noodle in all_noodle:
+    # df2.loc[df2["generic_name"].str.contains(noodle, case=False, na=False), "generic_name"] = "Noodle"
+    df2.loc[df2["generic_name"].str.lower() == noodle.lower(), "generic_name"] = "Noodle"
+
+=== Cell 39 (markdown) ===
+8. Canacolizing all type pea to pea
+
+=== Cell 40 (code) ===
+all_pea = df2.loc[df2["generic_name"].str.contains("pea", case=False, na=False), "generic_name"].unique().tolist()
+print(all_pea)
+raw_pea =[
+    'pea',
+    'peas',
+    'snow pea',
+    'snap pea',
+    'english pea',
+    'split pea',
+    'black-eyed pea',
+    'pigeon pea',
+    'pea bean'
+]
+# for pea in raw_pea:
+#     df2.loc[df2["generic_name"].str.contains(pea, case=False, na=False), "generic_name"] = "Pea"
+
+for pea in raw_pea:
+    df2.loc[df2["generic_name"] == pea, "generic_name"] = "Pea"
+
+=== Cell 41 (markdown) ===
+9. Grouping by Transformative Process:
+- All bread types made from cereal sources were grouped under ‘bread’.
+- All fermented grape-based beverages (e.g., red wine, white wine, port wine) were merged as ‘wine’.
+
+=== Cell 42 (code) ===
+all_bread = df2.loc[df2["generic_name"].str.contains("bread", case=False, na=False), "generic_name"].unique().tolist()
+print(all_bread)
+bread_types = [
+    'Bread',
+    'White Bread',
+    'Pita Bread',
+    'Wheat Bread',
+    'Sourdough Bread',
+    'Rye Bread',
+    'Rye bread',
+    'White bread',
+    'Sandwich Bread',
+    'Whole Grain Bread',
+    'Multigrain Bread',
+    'Multigrain bread',
+    'Potato bread',
+    'French Bread',
+    'Savory Bread',
+    'Crisp bread',
+    'Cornbread',
+    'Frybread',
+    'Fry Bread',
+    'Bread Roll',
+    'Bread ',
+]
+for bread in bread_types:
+    # df2.loc[df2["generic_name"].str.contains(bread, case=False, na=False), "generic_name"] = "Bread"
+    df2.loc[df2["generic_name"].str.lower() == bread.lower(), "generic_name"] = "Bread"
+
+all_wine = df2.loc[df2["generic_name"].str.contains("wine", case=False, na=False), "generic_name"].unique().tolist()
+print(all_wine)
+wine_types = [
+    'wine',
+    'white wine',
+    'red wine',
+    'rose wine',
+    'sparkling wine',
+    'port wine',
+    'marsala wine',
+    'burgundy wine',
+    'madeira wine',
+    'dessert winee',
+    'ice wine',
+    'aromatic wine',
+    'muscat wine',
+    'blanc wine',
+    'argentine whine'
+]
+for wine in wine_types:
+    # df2.loc[df2["generic_name"].str.contains(wine, case=False, na=False), "generic_name"] = "Wine"
+    df2.loc[df2["generic_name"].str.lower() == wine.lower(), "generic_name"] = "Wine"
+
+=== Cell 43 (markdown) ===
+10. Generalizing Ingredient Subtypes: Specific cultivars or commercial variations were merged into their general class. For instance, cherry tomatoes, plum tomatoes, and globe tomatoes were all grouped under ’tomatoes’.
+
+=== Cell 44 (code) ===
+all_tomato = df2.loc[df2["generic_name"].str.contains("tomato", case=False, na=False), "generic_name"].unique().tolist()
+print(all_tomato)
+tomato_types = [
+    'tomato',
+    'plum tomato',
+    'roma tomato',
+    'cherry tomato',
+    'grape tomato',
+    'beefsteak tomato',
+    'heirloom tomato',
+    'san marzano tomato',
+    'pear tomato'
+]
+for tomato in tomato_types:
+    # df2.loc[df2["generic_name"].str.contains(tomato, case=False, na=False), "generic_name"] = "Tomato"
+    df2.loc[df2["generic_name"].str.lower() == tomato.lower(), "generic_name"] = "Tomato"
+
+=== Cell 45 (markdown) ===
+11. All pork part to pork
+
+=== Cell 46 (code) ===
+all_pork = df2.loc[df2["generic_name"].str.contains("pork", case=False, na=False), "generic_name"].unique().tolist()
+print(all_pork)
+raw_pork = [
+    'pork',
+    'pork chop',
+    'pork tenderloin',
+    'pork loin',
+    'pork butt',
+    'pork belly',
+    'pork neck bone',
+    'pork ribs',
+    'pork rib',
+    'baby back pork ribs',
+    'pork stew meat',
+    'pork meat',
+    'pork skin',
+    'pork back',
+    'pork leg',
+    'pork jowl',
+    'pork lung'
+]
+for pork in raw_pork:
+    # df2.loc[df2["generic_name"].str.contains(pork, case=False, na=False), "generic_name"] = "Pork"
+    df2.loc[df2["generic_name"].str.lower() == pork.lower(), "generic_name"] = "Pork"
+
+=== Cell 47 (code) ===
+# Final cleanup: strip leftover spaces and standardize case
+df2["generic_name"] = (
+    df2["generic_name"]
+    .astype("string")
+    .str.strip()
+    .str.lower()
+ )
+
+print("Ingredients:", sorted(df2['ingredient'].unique().tolist()))
+print("Generic names:", sorted(df2['generic_name'].unique().tolist()), "\nCount:", len(df2['generic_name'].unique()))
+print("Category types:", sorted(df2['Dietrx_Category'].unique().tolist()))
+
+=== Cell 48 (code) ===
+# ----------------TESTING----------------
+# df2['generic_name'].hist()
+# plt.show()
+# import seaborn as sns
+# sns.pairplot(df2
+
+=== Cell 49 (markdown) ===
+#### **Aliasing category type**
+- e.g Additive-Salt -> Additive
+
+=== Cell 50 (code) ===
+# Normalising first letter of each word to be capital and removing leading/trailing spaces
+df2["Dietrx_Category"] = df2["Dietrx_Category"].apply(lambda x: x.lower().strip() if isinstance(x, str) else x)
+print("Category types:", sorted(df2['Dietrx_Category'].unique().tolist()))
+
+mapping = {
+    'additive': 'Additive',
+    'additive-salt': 'Additive',
+    'additive-sugar' : 'Additive',
+    'additive-vinegar' : 'Additive',
+    'additive-yeast' : 'Additive',
+    'bakery' : 'Bakery',
+    'berry': 'Fruit',
+    'beverage' : "Beverage",
+    'beverage caffeinated' : 'Beverage',
+    'beverage-alcoholic' : 'Beverage Alcoholic',
+    'cereal': 'Cereal',
+    'condiment': 'Condiment',
+    'dairy': 'Dairy',
+    'dish': 'Dish',
+    'essential oil': 'Essential Oil',
+    'fish': 'Fish',
+    'flower': 'Flower',
+    'fruit': 'Fruit',
+    'fungi': 'Fungus',
+    'fungus': 'Fungus',
+    'gourd': 'Vegetable',
+    'herb': 'Herb',
+    'legume': 'Legume',
+    'maize': 'Maize',
+    'meat' : 'Meat',
+    'nuts and seeds': 'Nuts and Seeds',
+    'plant': 'Plant',
+    'plant derivative': 'Plant',
+    'seafood': 'Seafood',
+    'seed': 'Nuts and Seeds',
+    'spice': 'Spice',
+    'vegetable': 'Vegetable',
+    'vegetable fruit': 'Vegetable',
+    'vegetable tuber': 'Vegetable',
+    'dish' : 'Dish',
+}
+
+df2['Dietrx_Category'] = df2['Dietrx_Category'].replace(mapping)
+print("Category types:", sorted(df2['Dietrx_Category'].unique().tolist()))
+
+
+=== Cell 51 (code) ===
+df2.sample(100)
+
+=== Cell 52 (markdown) ===
+### **Df_3**
+
+=== Cell 53 (code) ===
+df3 = pd.read_csv('RecipeDB1_Ingredient_Phrases.csv')
+df3.head()
+
+=== Cell 54 (code) ===
+df3.drop(columns=['Ingredient_Phrase', 'Quantity', 'Unit','State', 'DF', 'Temp','Size','Other','Name'], inplace=True)
+df3.drop_duplicates(inplace=True)
+
+=== Cell 55 (code) ===
+print(df3.info())
+df3.describe()
+
+=== Cell 56 (code) ===
+print(df3.isnull().sum())
+print(df3['ing_id'].dtype)
+df3 = df3.dropna(subset=['ing_id'])
+# print(df3['ing_id'].unique().tolist())
+df3['ing_id'] = df3['ing_id'].astype(int)
+
+=== Cell 57 (code) ===
+df3.head()
+
+=== Cell 58 (code) ===
+print(df3.isnull().sum())
+print(df3['ing_id'].dtype)
+
+
+=== Cell 59 (code) ===
+df2.head()
+
+=== Cell 60 (markdown) ===
+### **Merging**
+
+=== Cell 61 (code) ===
+# -----------------------------
+# Normalize text
+# -----------------------------
+def norm(x):
+    return x.lower().strip() if isinstance(x, str) else x
+
+recipes = df1.rename(columns={
+    "Recipe_id": "recipe_id",
+    "Region": "cuisine",
+    "Sub_region": "country",
+    "Continent": "continent"
+})
+
+ingredients = df2.rename(columns={
+    "IngID": "entity_id",
+    "generic_name": "aliased_ingredient_name",
+    "Dietrx_Category": "category"
+})
+
+aliases = df3.rename(columns={
+    "Recipe_Number": "recipe_id",
+    "ing_id": "entity_id"
+})
+
+recipes["cuisine"] = recipes["cuisine"].apply(norm)
+recipes["country"] = recipes["country"].apply(norm)
+recipes["continent"] = recipes["continent"].apply(norm)
+
+ingredients["aliased_ingredient_name"] = ingredients["aliased_ingredient_name"].apply(norm)
+ingredients["category"] = ingredients["category"].apply(norm)
+
+
+# -----------------------------
+# Ingredient → Category mapping via Entity ID Joins
+# -----------------------------
+aliases = aliases.merge(
+    ingredients[["entity_id", "aliased_ingredient_name", "category"]],
+    on="entity_id",
+    how="left"
+ )
+
+# Drop ingredients without category (noise)
+aliases = aliases.dropna(subset=["category"])
+
+# Attach cuisine
+# -----------------------------
+edgelist = aliases.merge(
+    recipes[["recipe_id", "cuisine"]],
+    on="recipe_id",
+    how="left"
+ )
+
+# -----------------------------
+# Final edgelist
+# -----------------------------
+edgelist = edgelist[
+    ["recipe_id", "aliased_ingredient_name", "cuisine", "category"]
+].sort_values("recipe_id")
+
+# Ensure one edge per recipe + ingredient
+edgelist = edgelist.drop_duplicates(subset=["recipe_id", "aliased_ingredient_name"])
+
+# -----------------------------
+# Save
+# -----------------------------
+edgelist.to_csv("ingredient_edgelist.csv", index=False)
+# edgelist.sort_values("recipe_id").head().
+# RECIPE ID STARTS from 2610
+edgelist.head(20)
+
+=== Cell 62 (code) ===
+print(edgelist.describe())
+print(edgelist.isnull().sum())
+
+print("Categories:", sorted(edgelist['category'].unique().tolist()), "\n" + str(edgelist['category'].describe()))
+print("Cuisines:", sorted(edgelist['cuisine'].unique().tolist()), "\n" + str(edgelist['cuisine'].describe()))
+print("Ingredients:", sorted(edgelist['aliased_ingredient_name'].unique().tolist()), "\n" + str(edgelist['aliased_ingredient_name'].describe()))
+
+
+=== Cell 63 (code) ===
+df = pd.read_csv("ingredient_edgelist.csv")
+df.head()
+print(sorted(df["cuisine"].unique()))
+print(sorted(df["aliased_ingredient_name"].unique()))
+print(sorted(df["category"].unique()))
+
+print(df["cuisine"].value_counts(), "\n\n", df["category"].value_counts(), "\n\n", df["aliased_ingredient_name"].value_counts())
+print(len(df["aliased_ingredient_name"].unique()))
+
+=== Cell 64 (code) ===
+# Number of recipes per cuisine
+recipes_per_cuisine = (
+    df[["cuisine", "recipe_id"]]
+    .drop_duplicates()
+    .groupby("cuisine")
+    .size()
+    .rename("num_recipes")
+)
+
+# Number of unique ingredients per cuisine
+ingredients_per_cuisine = (
+    df[["cuisine", "aliased_ingredient_name"]]
+    .drop_duplicates()
+    .groupby("cuisine")
+    .size()
+    .rename("num_ingredients")
+)
+
+# Combine
+stats = pd.concat(
+    [recipes_per_cuisine, ingredients_per_cuisine],
+    axis=1
+).reset_index()
+
+stats
+
+
+=== Cell 65 (code) ===
+x = stats["num_ingredients"].values
+y = stats["num_recipes"].values
+
+# Linear fit in log-space
+coeffs = np.polyfit(x, np.log10(y), 1)
+a, b = coeffs
+
+# Generate smooth curve
+x_fit = np.linspace(x.min(), x.max(), 200)
+y_fit = 10 ** (a * x_fit + b)
+
+
+=== Cell 66 (code) ===
+plt.figure(figsize=(12, 8))
+
+# Scatter points
+plt.scatter(
+    stats["num_ingredients"],
+    stats["num_recipes"],
+    s=80,
+    alpha=0.9
+)
+
+# Exponential trend
+plt.plot(
+    x_fit,
+    y_fit,
+    linestyle="--",
+    color="gray",
+    linewidth=2
+)
+
+# Log scale on y-axis
+plt.yscale("log")
+
+# Labels
+plt.xlabel("Total Number of Ingredients", fontsize=16)
+plt.ylabel("Number of Recipes", fontsize=16)
+
+# Annotate cuisines
+for _, row in stats.iterrows():
+    plt.text(
+        row["num_ingredients"] + 5,
+        row["num_recipes"],
+        row["cuisine"].title(),
+        fontsize=10
+    )
+
+plt.tight_layout()
+plt.show()
+
+
+=== Cell 67 (code) ===
+import pickle
+import os
+import csv
+import networkx as nx
+from collections import defaultdict
+
+
+# ---------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------
+
+# Location of the raw input data directory.
+data_loc = ""
+
+# Initialize a dictionary keyed by cuisine -> NetworkX MultiGraph.
+# Using defaultdict with nx.MultiGraph as the factory ensures a new empty
+# MultiGraph is created upon first access for a missing cuisine key.
+nx_graph_dict = defaultdict(nx.MultiGraph)
+
+# ---------------------------------------------------------------------
+# Ingest raw edgelist and build bipartite graphs per cuisine
+# ---------------------------------------------------------------------
+
+# Read recipe–ingredient edges from the semicolon-separated CSV.
+with open(os.path.join(data_loc, "ingredient_edgelist.csv"), "r") as f:
+    reader = csv.reader(f)
+    next(reader)  # skip header
+
+    for line in reader:
+        # The file is semicolon-separated; we split explicitly.
+        # The file is actually comma-separated, so we can use `line` directly.
+        recipe_id = int(line[0])
+        ingredient = line[1]
+        cuisine = line[2]
+        ing_type = line[3]
+
+        # If this is the first time we see the cuisine, create its graph and
+        # add the current nodes/edge. Otherwise, ensure nodes exist and add edge.
+        if cuisine not in nx_graph_dict.keys():
+            nx_graph_dict[cuisine] = nx.MultiGraph()
+
+            # Add recipe node with attributes: bipartite partition and cuisine.
+            nx_graph_dict[cuisine].add_node(
+                recipe_id, bipartite=0, cuisine=cuisine
+            )
+
+            # Add ingredient node with attributes: bipartite partition, display name, and category.
+            nx_graph_dict[cuisine].add_node(
+                ingredient, bipartite=1, name=ingredient, category=ing_type
+            )
+
+            # Connect recipe and ingredient with an edge.
+            nx_graph_dict[cuisine].add_edge(recipe_id, ingredient)
+
+        else:
+            # Ensure the recipe node exists (idempotent).
+            if not nx_graph_dict[cuisine].has_node(recipe_id):
+                nx_graph_dict[cuisine].add_node(
+                    recipe_id, bipartite=0, cuisine=cuisine
+                )
+
+            # Ensure the ingredient node exists (idempotent).
+            if not nx_graph_dict[cuisine].has_node(ingredient):
+                nx_graph_dict[cuisine].add_node(
+                    ingredient, bipartite=1, name=ingredient, category=ing_type
+                )
+
+            # Connect recipe and ingredient with an edge.
+            nx_graph_dict[cuisine].add_edge(recipe_id, ingredient)
+
+# ---------------------------------------------------------------------
+# Persist outputs: one GraphML per cuisine, plus a pickle with all graphs
+# ---------------------------------------------------------------------
+
+# Ensure output directories exist
+graphml_dir = "post_processed_data/graphml_food_nets_directory"
+os.makedirs(graphml_dir, exist_ok=True)
+
+pickle_dir = "post_processed_data"
+os.makedirs(pickle_dir, exist_ok=True)
+
+for cuisine in nx_graph_dict.keys():
+    graph = nx_graph_dict[cuisine]
+    # Writes a GraphML file named after the cuisine.
+    nx.write_graphml_lxml(
+        graph, f"{graphml_dir}/{cuisine}.graphml"
+    )
+
+# Save the full dictionary of graphs for convenient re-use.
+pickle.dump(nx_graph_dict, open(f"{pickle_dir}/graph_dict_from_edgelist.pkl", "wb"))
+
+=== Cell 68 (code) ===
+"""
+Ridge plot of recipe-size distributions across cuisines.
+
+This script loads the per-cuisine recipe–ingredient bipartite graphs and computes,
+for each cuisine:
+- Recipe size (number of ingredients per recipe)
+- Recipe *type* size (number of distinct ingredient categories per recipe)
+
+It then produces a ridge (joy) plot showing the kernel density estimate (KDE)
+of recipe sizes for each cuisine, colored by continent.
+
+Inputs
+------
+- post_processed_data/graph_dict_from_edgelist.pkl
+    A dict: cuisine -> NetworkX MultiGraph (bipartite). Nodes:
+      - recipes: bipartite=0
+      - ingredients: bipartite=1 with node attribute 'category'
+
+Outputs
+-------
+- figures/basic_statistics/recipe_size_dist_ridgeplot.pdf
+
+Notes
+-----
+- Excludes cuisines: misc_central_american, misc_dutch, misc_belgian
+- Cuisines are ordered by their mean recipe size (ascending).
+- Seaborn FacetGrid is used to build the ridgeline chart (one KDE per row).
+"""
+
+import numpy as np
+import pandas as pd
+import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns
+import networkx as nx  # kept for environment parity (graphs are NetworkX)
+
+
+# ---------------------------------------------------------------------
+# Load bipartite graphs (repo-friendly path) and filter cuisines
+# ---------------------------------------------------------------------
+graph_dict = pickle.load(open("post_processed_data/graph_dict_from_edgelist.pkl", "rb"))
+
+distributions = []
+type_distributions = []
+
+exclude_list = ["misc_central_american", "misc_dutch", "misc_belgian"]
+updated_dict = {key: value for key, value in graph_dict.items() if key not in exclude_list}
+
+# ---------------------------------------------------------------------
+# Compute per-cuisine recipe size and type size lists
+# ---------------------------------------------------------------------
+for cuisine in updated_dict.keys():
+    cuisine_graph = updated_dict[cuisine]
+
+    recipes = {n for n, d in cuisine_graph.nodes(data=True) if d["bipartite"] == 0}
+    ingredient_type_dict = {n: d["category"] for n, d in cuisine_graph.nodes(data=True) if d["bipartite"] == 1}
+
+    # Recipe sizes (ingredient counts)
+    degree_sequence = sorted((d for n, d in cuisine_graph.degree() if n in recipes), reverse=True)
+
+    # Recipe type sizes (distinct category counts)
+    type_degree_sequence = []
+    for recipe in recipes:
+        type_degree_sequence.append(len(set(ingredient_type_dict[ing] for ing in cuisine_graph.neighbors(recipe))))
+
+    distributions.append(degree_sequence)
+    type_distributions.append(type_degree_sequence)
+
+labels = list(updated_dict.keys())
+
+# ---------------------------------------------------------------------
+# Build long-form DataFrame with summary columns for ordering
+# ---------------------------------------------------------------------
+data = []
+for i, (dist, type_dist) in enumerate(zip(distributions, type_distributions)):
+    for value1, value2 in zip(dist, type_dist):
+        data.append(
+            [
+                value1,                 # recipe_size
+                value2,                 # recipe_type_size
+                labels[i],              # cuisine
+                max(dist),              # max_recipe_size
+                np.mean(dist),          # mean_recipe_size
+                max(type_dist),         # max_type_size
+                np.mean(type_dist),     # mean_type_size
+            ]
+        )
+
+df = pd.DataFrame(
+    data,
+    columns=[
+        "recipe_size",
+        "recipe_type_size",
+        "cuisine",
+        "max_recipe_size",
+        "mean_recipe_size",
+        "max_type_size",
+        "mean_type_size",
+    ],
+).sort_values(by=["mean_recipe_size"])
+
+# Optional hatch groups (left in-place; final plot uses black edges instead)
+hatching_groups = [
+    list(updated_dict.keys())[:6],
+    list(updated_dict.keys())[6:12],
+    list(updated_dict.keys())[12:18],
+    list(updated_dict.keys())[18:],
+]
+hatches = ["|", "-", "/", "\\ "]
+df["hatch"] = [""] * len(df)
+for group, hatch in zip(hatching_groups, hatches):
+    index = df.index[df["cuisine"].isin(group)]
+    for idx in index:
+        df.loc[idx, "hatch"] = hatch
+
+# ---------------------------------------------------------------------
+# Colors by continent (aligned to graph cuisine keys)
+# ---------------------------------------------------------------------
+cuisine_to_continents = {
+    "australian": "Oceania",
+    "belgian": "Europe",
+    "canadian": "America",
+    "caribbean": "America",
+    "central american": "America",
+    "chinese and mongolian": "Asia",
+    "deutschland": "Europe",
+    "eastern european": "Europe",
+    "french": "Europe",
+    "greek": "Europe",
+    "indian subcontinent": "Asia",
+    "irish": "Europe",
+    "italian": "Europe",
+    "japanese": "Asia",
+    "korean": "Asia",
+    "mexican": "America",
+    "middle eastern": "Asia",
+    "northern africa": "Africa",
+    "rest africa": "Africa",
+    "scandinavian": "Europe",
+    "south american": "America",
+    "southeast asian": "Asia",
+    "spanish and portuguese": "Europe",
+    "thai": "Asia",
+    "uk": "Europe",
+    "us": "America",
+}
+continents_to_colors = {"Africa": "#b2df8a", "America": "#fb9a99", "Asia": "#fdbf6f", "Europe": "#a6cee3", "Oceania": "#cab2d6"}
+
+missing_cuisines = [cuisine for cuisine in df["cuisine"].unique() if cuisine not in cuisine_to_continents]
+if missing_cuisines:
+    raise ValueError(f"Missing continent mapping for cuisines: {missing_cuisines}")
+
+colordict = {
+    cuisine: continents_to_colors[cuisine_to_continents[cuisine]]
+    for cuisine in df["cuisine"].unique()
+}
+
+# ---------------------------------------------------------------------
+# Plot: ridgeline KDE of recipe sizes by cuisine
+# ---------------------------------------------------------------------
+sns.set_theme(style="ticks", rc={"axes.facecolor": (0, 0, 0, 0), "axes.linewidth": 2, "font.family": "DejaVu Sans"})
+sns.set_context(context="paper")
+
+g = sns.FacetGrid(df, row="cuisine", hue="cuisine", aspect=9, height=1.2, palette=colordict)
+
+# Filled KDE per row
+g.map_dataframe(sns.kdeplot, x="recipe_size", fill=True, alpha=1, cut=0)
+
+# Per-row label at right
+def label(color, label):
+    label = label.replace("_", " ").title()
+    ax = plt.gca()
+    ax.text(1, 0.2, label, color=color, fontsize=20, ha="right", va="top", transform=ax.transAxes)
+
+g.map(label, label="cuisine", color="black")
+
+# Layout and axes cosmetics
+g.fig.subplots_adjust(hspace=0)
+g.set_titles("")
+g.set(yticks=[], xticks=np.arange(0, 30, 5), xlabel="recipe_size")
+g.set_xticklabels(np.arange(0, 30, 5), size=28)
+g.set(xlim=(0, 25))
+g.despine(left=True)
+g.set(ylabel="")
+
+# Add black edges to filled KDE patches for clarity
+for ax in g.axes.flat:
+    for patch in ax.collections:
+        patch.set_edgecolor("black")
+
+plt.xlabel("Recipe Size", fontsize=28, labelpad=25)
+
+# ---------------------------------------------------------------------
+# Save figure (repo-friendly path)
+# ---------------------------------------------------------------------
+plt.savefig("recipe_size_dist_ridgeplot.pdf", bbox_inches="tight")
+plt.show()
+
+=== Cell 69 (code) ===
+!pip install palettable
+
+=== Cell 70 (code) ===
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import os
+
+from palettable.colorbrewer.diverging import RdBu_5_r, RdBu_5  # kept for parity; not used directly
+
+# ---------------------------------------------------------------------
+# Load data (repo-friendly path)
+# ---------------------------------------------------------------------
+main_df = pd.read_csv("ingredient_edgelist.csv")
+
+# ---------------------------------------------------------------------
+# Cuisine order/labels aligned with actual dataset keys
+# ---------------------------------------------------------------------
+cuisines = sorted(set(main_df["cuisine"].unique()))
+
+label_overrides = {
+    "chinese and mongolian": "Chinese & Mongolian",
+    "deutschland": "German",
+    "eastern european": "East European",
+    "indian subcontinent": "Indian",
+    "middle eastern": "Middle Eastern",
+    "northern africa": "Northern Africa",
+    "rest africa": "Rest Africa",
+    "south american": "South American",
+    "southeast asian": "Southeast Asian",
+    "spanish and portuguese": "Spanish & Portuguese",
+    "uk": "UK",
+    "us": "American",
+}
+
+# Sort by display labels (not raw keys) so labels are truly alphabetical
+cuisine_label_pairs = sorted(
+    [(c, label_overrides.get(c, c.title())) for c in cuisines],
+    key=lambda x: x[1].lower(),
+)
+cuisines = [c for c, _ in cuisine_label_pairs]
+labels = [label for _, label in cuisine_label_pairs]
+
+# Cuisine → Continent mapping
+cuisine_to_continents = {
+    "australian": "Oceania",
+    "belgian": "Europe",
+    "canadian": "America",
+    "caribbean": "America",
+    "central american": "America",
+    "chinese and mongolian": "Asia",
+    "deutschland": "Europe",
+    "eastern european": "Europe",
+    "french": "Europe",
+    "greek": "Europe",
+    "indian subcontinent": "Asia",
+    "irish": "Europe",
+    "italian": "Europe",
+    "japanese": "Asia",
+    "korean": "Asia",
+    "mexican": "America",
+    "middle eastern": "Asia",
+    "northern africa": "Africa",
+    "rest africa": "Africa",
+    "scandinavian": "Europe",
+    "south american": "America",
+    "southeast asian": "Asia",
+    "spanish and portuguese": "Europe",
+    "thai": "Asia",
+    "uk": "Europe",
+    "us": "America",
+}
+continents_to_colors = {"Africa": "#b2df8a", "America": "#fb9a99", "Asia": "#fdbf6f", "Europe": "#a6cee3", "Oceania": "#cab2d6"}
+
+missing_in_map = [c for c in cuisines if c not in cuisine_to_continents]
+if missing_in_map:
+    raise ValueError(f"Missing continent mapping for cuisines: {missing_in_map}")
+
+colordict = {cuisine: continents_to_colors[cuisine_to_continents[cuisine]] for cuisine in cuisines}
+
+# ---------------------------------------------------------------------
+# Build category-by-cuisine matrix (row-normalized)
+# ---------------------------------------------------------------------
+categories = main_df["category"].value_counts().index
+data = np.zeros((len(cuisines), len(categories)))
+
+for i, cuisine in enumerate(cuisines):
+    cuisine_rows = main_df[main_df["cuisine"] == cuisine]
+    for j, category in enumerate(categories):
+        data[i, j] = len(cuisine_rows[cuisine_rows["category"] == category])
+
+# Row-wise normalization to fractions
+sum_of_rows = data.sum(axis=1)
+norm_data = data / sum_of_rows[:, np.newaxis]
+
+# ---------------------------------------------------------------------
+# Colormap (pastel version of seaborn 'rocket_r')
+# ---------------------------------------------------------------------
+cmap_colors = sns.color_palette("rocket_r", n_colors=256)
+
+pastel_colors = []
+for color in cmap_colors:
+    softness = 0.175
+    pastel_color = [softness + c * (1 - softness) for c in color[:3]]
+    pastel_colors.append(pastel_color)
+
+pastel_cmap = sns.color_palette(pastel_colors, as_cmap=True)
+
+# ---------------------------------------------------------------------
+# Heatmap of normalized category fractions
+# ---------------------------------------------------------------------
+fig, ax = plt.subplots(figsize=(17, 17))
+heatmap = sns.heatmap(
+    norm_data,
+    cmap=pastel_cmap,
+    cbar=True,
+    ax=ax,
+    square=False,
+    vmax=0.3,
+    vmin=0,
+    cbar_kws={"orientation": "horizontal", "pad": 0.02, "location": "top", "shrink": 0.9, "extend": "max", "aspect": 30},
+)
+
+# Ticks and labels
+ax.set_xticks(np.arange(len(categories)) + 0.5)
+ax.set_yticks(np.arange(len(labels)) + 0.5)
+ax.set_xticklabels(categories, fontsize=28)
+ax.set_yticklabels(labels, fontsize=28)
+ax.tick_params(size=7.5, axis="both")
+
+# Rotate x tick labels for readability
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor")
+
+# Colorbar label and ticks
+heatmap.collections[0].colorbar.set_label("Fraction", fontsize=26, labelpad=10)
+heatmap.collections[0].colorbar.ax.tick_params(labelsize=20)
+
+plt.xlabel("Ingredient Types", fontsize=28, labelpad=30)
+plt.ylabel("Cuisines", fontsize=28, labelpad=20)
+plt.tight_layout()
+
+# Save to repo-friendly path
+os.makedirs("figures/basic_statistics", exist_ok=True)
+plt.savefig("figures/basic_statistics/heatmap_ing_pop_profile.pdf", bbox_inches="tight")
+plt.show()
+
+# ---------------------------------------------------------------------
+# Mini bar charts for five selected cuisines
+# ---------------------------------------------------------------------
+fig, axes = plt.subplots(5, 1, figsize=(8, 8), facecolor="white", dpi=150, sharex=True)
+for ax, cuisine in zip(
+    axes.flatten(),
+    ["northern africa", "us", "australian", "indian subcontinent", "italian"],
+):
+    # Category fractions for the selected cuisine
+    count_cuisine = pd.Series(dict(zip(categories, norm_data[cuisines.index(cuisine)])))
+
+    # Cap very large bars for visualization (as in original code)
+    if cuisine == "northern africa":
+        count_cuisine[count_cuisine >= 0.2] = 0.195
+
+    g = sns.barplot(ax=ax, y=count_cuisine.values, x=count_cuisine.index, color=colordict[cuisine])
+    ax.text(1, 0.99, labels[cuisines.index(cuisine)], ha="right", va="top", transform=ax.transAxes, fontsize=12)
+    g.set_ylabel("Fraction", size=12)
+    if cuisine == "indian subcontinent":
+        g.set_ylim(ymax=0.3)
+    else:
+        g.set_ylim(ymax=0.2)
+
+for ax in axes:
+    ax.set_xticks(np.arange(len(categories)))
+
+axes[-1].set_xlabel("Ingredient Types", fontsize=12, labelpad=20)
+axes[-1].set_xticklabels(categories, fontsize=12, rotation=45, ha="right", rotation_mode="anchor")
+sns.despine()
+
+# Save to repo-friendly path
+fig.savefig("figures/basic_statistics/barchart_ing_pop_profile.pdf", bbox_inches="tight")
+plt.show()
+
+=== Cell 71 (code) ===
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import os
+
+from palettable.colorbrewer.diverging import RdBu_5_r
+from scipy.stats import zscore
+
+# ---------------------------------------------------------------------
+# Load data (aligned with upstream generated file)
+# ---------------------------------------------------------------------
+main_df = pd.read_csv("ingredient_edgelist.csv")
+
+# ---------------------------------------------------------------------
+# Cuisine order/labels aligned with actual dataset keys
+# ---------------------------------------------------------------------
+cuisines = sorted(set(main_df["cuisine"].unique()))
+
+label_overrides = {
+    "chinese and mongolian": "Chinese & Mongolian",
+    "deutschland": "German",
+    "eastern european": "East European",
+    "indian subcontinent": "Indian",
+    "middle eastern": "Middle Eastern",
+    "northern africa": "Northern Africa",
+    "rest africa": "Rest Africa",
+    "south american": "South American",
+    "southeast asian": "Southeast Asian",
+    "spanish and portuguese": "Spanish & Portuguese",
+    "uk": "UK",
+    "us": "American",
+}
+
+# Sort by display labels (so y-axis labels are consistently ordered)
+cuisine_label_pairs = sorted(
+    [(c, label_overrides.get(c, c.title())) for c in cuisines],
+    key=lambda x: x[1].lower(),
+)
+cuisines = [c for c, _ in cuisine_label_pairs]
+labels = [label for _, label in cuisine_label_pairs]
+
+# Cuisine → Continent mapping
+cuisine_to_continents = {
+    "australian": "Oceania",
+    "belgian": "Europe",
+    "canadian": "America",
+    "caribbean": "America",
+    "central american": "America",
+    "chinese and mongolian": "Asia",
+    "deutschland": "Europe",
+    "eastern european": "Europe",
+    "french": "Europe",
+    "greek": "Europe",
+    "indian subcontinent": "Asia",
+    "irish": "Europe",
+    "italian": "Europe",
+    "japanese": "Asia",
+    "korean": "Asia",
+    "mexican": "America",
+    "middle eastern": "Asia",
+    "northern africa": "Africa",
+    "rest africa": "Africa",
+    "scandinavian": "Europe",
+    "south american": "America",
+    "southeast asian": "Asia",
+    "spanish and portuguese": "Europe",
+    "thai": "Asia",
+    "uk": "Europe",
+    "us": "America",
+}
+continents_to_colors = {
+    "Africa": "#b2df8a",
+    "America": "#fb9a99",
+    "Asia": "#fdbf6f",
+    "Europe": "#a6cee3",
+    "Oceania": "#cab2d6",
+}
+
+missing_in_map = [c for c in cuisines if c not in cuisine_to_continents]
+if missing_in_map:
+    raise ValueError(f"Missing continent mapping for cuisines: {missing_in_map}")
+
+colordict = {
+    cuisine: continents_to_colors[cuisine_to_continents[cuisine]]
+    for cuisine in cuisines
+}
+
+# ---------------------------------------------------------------------
+# Build category-by-cuisine matrix (row-normalized to fractions)
+# ---------------------------------------------------------------------
+categories = main_df["category"].value_counts().index
+data = np.zeros((len(cuisines), len(categories)))
+
+for i, cuisine in enumerate(cuisines):
+    cuisine_rows = main_df[main_df["cuisine"] == cuisine]
+    for j, category in enumerate(categories):
+        data[i, j] = len(cuisine_rows[cuisine_rows["category"] == category])
+
+sum_of_rows = data.sum(axis=1)
+norm_data = data / sum_of_rows[:, np.newaxis]
+
+# ---------------------------------------------------------------------
+# Heatmap of Z-scores (per category column)
+# ---------------------------------------------------------------------
+os.makedirs("figures/basic_statistics", exist_ok=True)
+
+fig, ax = plt.subplots(figsize=(17, 17))
+
+# Column-wise Z-scores across cuisines (axis=0)
+z_matrix = zscore(norm_data, axis=0)
+
+heatmap = sns.heatmap(
+    z_matrix,
+    cmap=RdBu_5_r.mpl_colormap,
+    cbar=True,
+    ax=ax,
+    square=False,
+    vmax=3,
+    vmin=-3,
+    cbar_kws={"orientation": "horizontal", "pad": 0.02, "location": "top", "shrink": 0.9, "extend": "both", "aspect": 30},
+)
+
+# Ticks and labels
+ax.set_xticks(np.arange(len(categories)) + 0.5)
+ax.set_yticks(np.arange(len(labels)) + 0.5)
+ax.set_xticklabels(categories, fontsize=28)
+ax.set_yticklabels(labels, fontsize=28)
+ax.tick_params(size=7.5, axis="both")
+
+# Rotate x tick labels for readability
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor")
+
+# Colorbar label and ticks
+heatmap.collections[0].colorbar.set_label("$Z$-score", fontsize=26, labelpad=10)
+heatmap.collections[0].colorbar.ax.tick_params(labelsize=20)
+
+plt.xlabel("Ingredient Types", fontsize=28, labelpad=30)
+plt.ylabel("Cuisines", fontsize=28, labelpad=20)
+plt.tight_layout()
+
+plt.savefig("figures/basic_statistics/heatmap_ing_pop_z_score_profile_4.pdf", bbox_inches="tight")
+plt.show()
+
+# ---------------------------------------------------------------------
+# Mini bar charts for five selected cuisines (Z-score profiles)
+# ---------------------------------------------------------------------
+z_matrix = zscore(norm_data, axis=0)
+
+selected = [
+    ("northern africa", [-2, 0, 2]),
+    ("us", [-1.2, 0, 1.2]),
+    ("australian", [-2, 0, 2]),
+    ("indian subcontinent", [-5, 0, 5]),
+    ("italian", [-2.5, 0, 2.5]),
+]
+
+fig, axes = plt.subplots(5, 1, figsize=(8, 8.15), facecolor="white", dpi=150, sharex=True)
+for ax, (cuisine, yticks) in zip(axes.flatten(), selected):
+    count_cuisine = pd.Series(dict(zip(categories, z_matrix[cuisines.index(cuisine)])))
+
+    if cuisine == "northern africa":
+        count_cuisine[count_cuisine >= 2] = 2
+    elif cuisine == "italian":
+        count_cuisine[count_cuisine >= 2.5] = 2.45
+
+    g = sns.barplot(ax=ax, y=count_cuisine.values, x=count_cuisine.index, color=colordict[cuisine])
+    cuisine_label = labels[cuisines.index(cuisine)]
+    ax.text(1, 0.2, cuisine_label, ha="right", va="top", transform=ax.transAxes, fontsize=12)
+    g.set_ylabel("$Z$-score", size=12)
+    g.set_ylim(yticks[0], yticks[-1])
+    g.set_yticks(yticks)
+
+axes[-1].set_xlabel("Ingredient Types", fontsize=13, labelpad=20)
+axes[-1].set_xticklabels(count_cuisine.index, fontsize=12, rotation=45, ha="right", rotation_mode="anchor")
+sns.despine()
+fig.align_ylabels(axes)
+
+fig.savefig("figures/basic_statistics/barchart_ing_pop_z_score_profile.pdf", bbox_inches="tight")
+plt.tight_layout()
+plt.show()
+
+=== Cell 72 (code) ===
+!pip install cairosvg
+!pip install backbone_network
+!pip install git+https://github.com/malcolmvr/backbone_network.git
+
+
+
+=== Cell 73 (code) ===
+!unzip category_symbols.zip
+
+
+=== Cell 74 (code) ===
+"""
+Extract ingredient-type (food category) graphs from recipe–ingredient bipartite graphs.
+
+This script builds *ingredient-category co-occurrence graphs* for each cuisine,
+starting from the recipe–ingredient bipartite graphs previously generated and saved
+with `build_bipartite_from_edgelist.py`.
+
+For each cuisine:
+- Nodes = ingredient categories (e.g., "dairy", "spice", "grain").
+- Weighted edges = number of recipes where two categories co-occur.
+- Node attribute `counts` = fraction of recipes in which that category appears.
+
+
+Input
+-----
+- Pickled bipartite graph dictionary:
+  `post_processed_data/graph_dict_from_edgelist.pkl`
+
+  Each entry is a `networkx.MultiGraph` with:
+  - bipartite=0 nodes: recipes
+  - bipartite=1 nodes: ingredients (with `category` attribute)
+
+Output
+------
+- Per-cuisine GraphML files:
+  `post_processed_data/graphml_food_type_nets_directory/<cuisine>.graphml`
+- A pickle with all cuisine category graphs:
+  `post_processed_data/nx_category_graph_dict_from_edgelist.pickle`
+
+Graph Schema (per cuisine)
+--------------------------
+- Graph type: `networkx.Graph` (simple weighted graph)
+- Nodes: ingredient categories
+    - attributes:
+        - `counts` : float, fraction of recipes in the cuisine containing at least
+                     one ingredient of that category.
+- Edges: weighted by the number of co-occurrences across recipes.
+
+Notes
+-----
+- Intermediate `MultiGraph` objects are used to count category co-occurrences
+  per recipe before aggregation.
+- Edge weights in the final graph represent the *total number of recipes*
+  where two categories co-occur, summed over all recipes in the cuisine.
+- The script assumes that `post_processed_data/graphml_food_type_nets_directory/`
+  exists; otherwise, `nx.write_graphml_lxml` will fail.
+
+Example
+-------
+Run after building the bipartite graphs:
+
+    python scripts/build_category_graphs.py
+
+"""
+
+import pickle
+import numpy as np
+import networkx as nx
+import os
+
+
+# ---------------------------------------------------------------------
+# Load bipartite recipe–ingredient graphs
+# ---------------------------------------------------------------------
+
+graph_dict = pickle.load(
+    open("post_processed_data/graph_dict_from_edgelist.pkl", "rb")
+)
+
+# Extract the unique set of ingredient categories across all cuisines
+ing_categories = np.unique(
+    np.hstack(
+        [
+            [
+                d["category"]
+                for n, d in graph_dict[cuisine].nodes(data=True)
+                if d["bipartite"] == 1
+            ]
+            for cuisine in graph_dict.keys()
+        ]
+    )
+)
+
+# Dictionary: cuisine -> category co-occurrence graph
+nx_category_graph_dict = {}
+
+# ---------------------------------------------------------------------
+# Build category co-occurrence graphs
+# ---------------------------------------------------------------------
+
+for cuisine in graph_dict.keys():
+    try:
+        cuisine_graph = graph_dict[cuisine]
+
+        # Initialize category graph for this cuisine
+        category_graph = nx.MultiGraph()
+        category_graph.add_nodes_from(ing_categories)
+
+        # Counter for per-category recipe presence
+        counter_dict = {key: 0 for key in ing_categories}
+
+        # Separate recipes and ingredient-category mapping
+        recipes = {n for n, d in cuisine_graph.nodes(data=True) if d["bipartite"] == 0}
+        ingredients = {
+            n: d["category"]
+            for n, d in cuisine_graph.nodes(data=True)
+            if d["bipartite"] == 1
+        }
+
+        # Process each recipe: connect its ingredient categories
+        for recipe in recipes:
+            category_list = [
+                ingredients[key] for key in list(cuisine_graph.neighbors(recipe))
+            ]
+
+            # Build a temporary multigraph for this recipe’s categories
+            g = nx.MultiGraph()
+            g.add_nodes_from(category_list)
+
+            for idx in range(len(category_list)):
+                node = category_list[idx]
+                for n in category_list[idx + 1 :]:
+                    g.add_edge(node, n)
+
+            # Convert to weighted simple graph
+            g_weighted = nx.Graph()
+            for u, v, d in g.edges(data=True):
+                weight = g.number_of_edges(u, v)
+                g_weighted.add_edge(u, v, weight=weight)
+
+            # Add edges (weight=1 per co-occurrence) to the cuisine category graph
+            category_graph.add_weighted_edges_from(
+                (node1, node2, w)
+                for (node1, node2), w in zip(
+                    g_weighted.edges(), [1 for _ in range(len(g_weighted.edges()))]
+                )
+            )
+
+            # Update category presence counts (normalized by number of recipes)
+            for cat in set(category_list):
+                counter_dict[cat] += 1 / len(recipes)
+
+        # Aggregate weighted multigraph into a simple weighted graph
+        G = nx.Graph()
+        G.add_nodes_from(ing_categories)
+        for u, v, data in category_graph.edges(data=True):
+            w = data["weight"]
+            if G.has_edge(u, v):
+                G[u][v]["weight"] += w
+            else:
+                G.add_edge(u, v, weight=w)
+
+        # Attach per-category recipe frequency counts
+        nx.set_node_attributes(G, counter_dict, "counts")
+
+        # Store final graph
+        nx_category_graph_dict[cuisine] = G
+
+    except KeyError:
+        # Skip cuisines missing expected attributes
+        pass
+
+# ---------------------------------------------------------------------
+# Persist outputs: GraphML per cuisine + pickle of all graphs
+# ---------------------------------------------------------------------
+
+graphml_dir = "post_processed_data/graphml_food_type_nets_directory"
+os.makedirs(graphml_dir, exist_ok=True)
+
+for cuisine in nx_category_graph_dict.keys():
+    ig_category_graph = nx_category_graph_dict[cuisine]
+    nx.write_graphml_lxml(
+        ig_category_graph,
+        f"{graphml_dir}/{cuisine}.graphml",
+    )
+
+os.makedirs("post_processed_data", exist_ok=True)
+
+pickle.dump(
+    nx_category_graph_dict,
+    open("post_processed_data/nx_category_graph_dict_from_edgelist.pickle", "wb"),
+)
+
+=== Cell 75 (code) ===
+"""
+Plot disparity-filtered backbones of ingredient-type graphs.
+
+This script loads per-cuisine ingredient-type graphs (category co-occurrence
+networks), extracts their backbones using the disparity filter method (Serrano et al.),
+and produces high-quality circular-layout visualizations with category-specific icons.
+
+Pipeline
+--------
+1. Load pickled dictionary of category graphs (cuisine -> NetworkX graph).
+2. Normalize edge weights so they sum to 1 per graph.
+3. Apply disparity filter and alpha-cut to retain statistically significant edges.
+4. Copy node attributes (counts) from the original graph to the backbone.
+5. Plot backbone:
+   - Nodes sized by relative frequency of categories in recipes.
+   - Nodes colored by predefined category color palette.
+   - Category icons placed slightly outside nodes for clarity.
+   - Edges weighted by normalized co-occurrence strength.
+6. Save each cuisine’s backbone visualization as SVG.
+
+Inputs
+------
+- Category graphs pickle:
+  "post_processed_data/category_graph_dict_from_edgelist.pickle""
+- SVG icons per food category (one per category):
+  "figures/category_symbols/<category>.svg"
+
+Outputs
+-------
+- SVG backbone plots per cuisine, saved to:
+  "figures/backbones/<cuisine>_<alpha>.svg"
+
+Dependencies
+------------
+- numpy, networkx, matplotlib, seaborn
+- cairosvg (for SVG → PNG conversion of category icons)
+- adjustText, svg.path, matplotlib.bezier (kept for compatibility)
+- backbone.py providing:
+    - disparity_filter
+    - disparity_filter_alpha_cut
+
+Notes
+-----
+- Alpha threshold for disparity filter is set via `alpha = 0.2`.
+- Script uses a circular layout to place categories evenly around a circle.
+- Icons are placed with an outward radial offset from the node centers.
+- Ensure output directories exist, otherwise `plt.savefig` will raise an error.
+"""
+
+import os
+import io
+import pickle
+import cairosvg
+import seaborn as sns
+import networkx as nx
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from backbone_network.backbone import*
+
+
+
+
+# ---------------------------------------------------------------------
+# Load data
+# ---------------------------------------------------------------------
+directory_path = "post_processed_data/nx_category_graph_dict_from_edgelist.pickle"
+category_graph_dict = pickle.load(open(directory_path, "rb"))
+
+
+def normalize_weights(graph):
+    """
+    Normalize edge weights of a graph so that they sum to 1.
+
+    Parameters
+    ----------
+    graph : networkx.Graph
+        Graph with weighted edges (edge attribute 'weight').
+
+    Returns
+    -------
+    None
+        Modifies `graph` in-place.
+    """
+    total_weight = sum(weight for _, _, weight in graph.edges.data("weight"))
+    for u, v, data in graph.edges(data=True):
+        data["weight"] /= total_weight
+
+
+# ---------------------------------------------------------------------
+# Visualization setup
+# ---------------------------------------------------------------------
+
+# Node colors by food category
+color_dict = {
+    "Fish": "#1F78B4",
+    "Meat": "#c44240",
+    "Legume": "#E6AB02",
+    "Seafood": "#A6CEE3",
+    "Fruit": "#f97306",
+    "Cereal": "#FDBF6F",
+    "Vegetable": "#33A02C",
+    "Herb": "#B2Df8A",
+    "Fungus": "#BA9E88",
+    "Plant": "#1B9E77",
+    "Bakery": "#FFFF99",
+    "Maize": "#F4D054",
+    "Flower": "#fe86a4",
+    "Nuts And Seeds": "#645403",
+    "Beverage Alcoholic": "#8c0034",
+    "Beverage": "#CAB2D6",
+    "Additive": "#d3d3d3",
+    "Essential Oil": "#677A04",
+    "Spice": "#C49C94",
+    "Dairy": "#FFF39A",
+    "Condiment": "#FF7F00",
+    "Dish": "#6A3D9A"
+}
+
+# Directory containing SVG files for category icons
+svg_directory = "category_symbols"
+
+# Preload SVG file paths for categories
+category_svg_dict = {}
+for category in color_dict.keys():
+    svg_file_path = os.path.join(svg_directory, f"{category}.svg")
+    if os.path.exists(svg_file_path):
+        category_svg_dict[category] = svg_file_path
+
+# Example cuisine subset for display (not strictly used in loop below)
+cuisine_list = [
+    "african",
+    "american",
+    "australasian",
+    "scandinavian",
+    "indian",
+    "italian",
+    "japanese",
+    "spanish",
+]
+
+alpha = 0.2  # significance threshold for disparity filter
+
+
+# ---------------------------------------------------------------------
+# Main loop: build and plot backbones
+# ---------------------------------------------------------------------
+for cuisine in category_graph_dict.keys():
+    fig, ax = plt.subplots(figsize=(9, 9))
+
+    # Fix axes ranges for circular layout
+    ax.set_xlim(-1.3, 1.3)
+    ax.set_ylim(-1.3, 1.3)
+
+    # Apply disparity filter backbone extraction
+    original_graph = category_graph_dict[cuisine]
+    normalize_weights(original_graph)
+    updated_graph = apply_disparity_filter(original_graph)
+    filtered_graph = get_graph_backbone(original_graph, alpha_t=alpha)
+
+    # Copy node attributes (counts) from original
+    attributes_to_copy = nx.get_node_attributes(original_graph, "counts")
+    nx.set_node_attributes(filtered_graph, attributes_to_copy, "counts")
+
+    # Compute node sizes from counts
+    total_counts = sum(list(nx.get_node_attributes(filtered_graph, "counts").values()))
+    sizes = (
+        np.array(list(nx.get_node_attributes(filtered_graph, "counts").values())) / total_counts
+    ) * 3500 * total_counts
+    sel_weights = nx.get_edge_attributes(filtered_graph, "weight").values()
+
+   # ✅ Normalize nodes FIRST
+    mapping = {node: node.title() for node in filtered_graph.nodes()}
+    filtered_graph = nx.relabel_nodes(filtered_graph, mapping)
+
+    # ✅ Compute positions AFTER renaming
+    pos = nx.circular_layout(filtered_graph, scale=1)
+
+    # ✅ Colors
+    ordered_colors = [color_dict.get(category, "#cccccc") for category in filtered_graph.nodes()]
+    nx.draw_networkx_nodes(
+        filtered_graph,
+        pos,
+        ax=ax,
+        node_size=sizes,
+        alpha=1,
+        node_color=ordered_colors,
+        edgecolors="black",
+        linewidths=2,
+    )
+
+    # Draw edges weighted by co-occurrence strength
+    nx.draw_networkx_edges(
+        filtered_graph,
+        pos,
+        ax=ax,
+        width=300 * np.array(list(sel_weights), dtype="float64"),
+        edge_color="grey",
+        alpha=0.6,
+    )
+
+    # Overlay category icons near each node
+    for node, (x, y) in pos.items():
+        angle = np.arctan2(y, x)
+        offset = 0.2  # radial offset for icons
+        new_x = x + offset * np.cos(angle)
+        new_y = y + offset * np.sin(angle)
+
+        svg_file_path = category_svg_dict.get(node)
+        if svg_file_path:
+            # Convert SVG to PNG in-memory
+            png_data = cairosvg.svg2png(url=svg_file_path, output_width=50, output_height=50)
+            image = OffsetImage(plt.imread(io.BytesIO(png_data)), zoom=0.9)
+            ab = AnnotationBbox(image, (new_x, new_y), frameon=False)
+            ax.add_artist(ab)
+
+    # Title customization
+    ax.set_title(cuisine.replace("_", " ").title(), y=-0.1, fontsize=15, color="black")
+    ax.set_axis_off()
+
+    # Save output plot
+    # plt.savefig(
+    #     f"figures/backbones/{cuisine}_{alpha}.svg",
+    #     bbox_inches="tight",
+    # )
+
+    plt.show()
+
+=== Cell 76 (code) ===
+import pickle
+import pandas as pd
+import itertools
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import os
+
+# ---------------------------------------------------------------------
+# Caption (as requested)
+# ---------------------------------------------------------------------
+print(
+    "Strip plots of z-scores for edge weights across world cuisines.\n"
+    "For each cuisine on the y-axis, the x-axis shows the z-scores of edge weights relative to the distribution of the corresponding edge weights across all 26 cuisines. A jitter is applied for better visualization.\n\n"
+    "Two edges are highlighted for each cuisine: one with a high z-score and one with a low z-score, representing significant deviations in the co-occurrence patterns."
+ )
+
+# ---------------------------------------------------------------------
+# Cuisine order/labels + continent mapping (from Cell 71)
+# ---------------------------------------------------------------------
+main_df = pd.read_csv("ingredient_edgelist.csv")
+main_df["cuisine"] = main_df["cuisine"].astype(str).str.strip().str.lower()
+
+cuisines = sorted(set(main_df["cuisine"].unique()))
+label_overrides = {
+    "chinese and mongolian": "Chinese & Mongolian",
+    "deutschland": "German",
+    "eastern european": "East European",
+    "indian subcontinent": "Indian",
+    "middle eastern": "Middle Eastern",
+    "northern africa": "Northern Africa",
+    "rest africa": "Rest Africa",
+    "south american": "South American",
+    "southeast asian": "Southeast Asian",
+    "spanish and portuguese": "Spanish & Portuguese",
+    "uk": "UK",
+    "us": "American",
+}
+cuisine_label_pairs = sorted(
+    [(c, label_overrides.get(c, c.title())) for c in cuisines],
+    key=lambda x: x[1].lower(),
+ )
+cuisines = [c for c, _ in cuisine_label_pairs]
+labels = [label for _, label in cuisine_label_pairs]
+label_to_y = {label: i for i, label in enumerate(labels)}
+
+cuisine_to_continents = {
+    "australian": "Oceania",
+    "belgian": "Europe",
+    "canadian": "America",
+    "caribbean": "America",
+    "central american": "America",
+    "chinese and mongolian": "Asia",
+    "deutschland": "Europe",
+    "eastern european": "Europe",
+    "french": "Europe",
+    "greek": "Europe",
+    "indian subcontinent": "Asia",
+    "irish": "Europe",
+    "italian": "Europe",
+    "japanese": "Asia",
+    "korean": "Asia",
+    "mexican": "America",
+    "middle eastern": "Asia",
+    "northern africa": "Africa",
+    "rest africa": "Africa",
+    "scandinavian": "Europe",
+    "south american": "America",
+    "southeast asian": "Asia",
+    "spanish and portuguese": "Europe",
+    "thai": "Asia",
+    "uk": "Europe",
+    "us": "America",
+}
+continents_to_colors = {
+    "Africa": "#b2df8a",
+    "America": "#fb9a99",
+    "Asia": "#fdbf6f",
+    "Europe": "#a6cee3",
+    "Oceania": "#cab2d6",
+}
+missing_in_map = [c for c in cuisines if c not in cuisine_to_continents]
+if missing_in_map:
+    raise ValueError(f"Missing continent mapping for cuisines: {missing_in_map}")
+cuisine_to_colors = {
+    cuisine: continents_to_colors[cuisine_to_continents[cuisine]]
+    for cuisine in cuisines
+}
+
+# ---------------------------------------------------------------------
+# Load graphs (weights per cuisine)
+# ---------------------------------------------------------------------
+graphs = pickle.load(open("post_processed_data/nx_category_graph_dict_from_edgelist.pickle", "rb"))
+graphs = {str(k).strip().lower(): v for k, v in graphs.items()}
+
+# -------------------------------
+# Pair counts (RAW graphs)
+# -------------------------------
+raw_graphs = pickle.load(open("post_processed_data/nx_category_graph_dict_from_edgelist.pickle", "rb"))
+raw_graphs = {str(k).strip().lower(): v for k, v in raw_graphs.items()}
+
+pair_counts = {}
+
+for cuisine, G in raw_graphs.items():
+    pair_counts[cuisine] = {}
+    for u, v, d in G.edges(data=True):
+        pair = tuple(sorted((u, v)))
+        pair_counts[cuisine][pair] = d["weight"]
+
+missing_graphs = [c for c in cuisines if c not in graphs]
+if missing_graphs:
+    raise ValueError(f"Missing graphs for cuisines: {missing_graphs}")
+
+# ---------------------------------------------------------------------
+# Build z-score dict for every edge across cuisines (26 cuisines)
+# ---------------------------------------------------------------------
+ingredient_types = [
+    "Additive","Bakery","Beverage","Beverage Alcoholic","Cereal","Condiment","Dairy","Dish",
+    "Essential Oil","Fish","Flower","Fruit","Fungus","Herb","Legume","Maize","Meat","Nuts And Seeds",
+    "Plant","Seafood","Spice","Vegetable",
+]
+
+edges = set()
+
+for G in graphs.values():
+    for u, v in G.edges():
+        edges.add(tuple(sorted((u, v))))
+
+edges = list(edges)
+zscore_dict = {}
+for edge in edges:
+    weights = []
+    for cuisine in cuisines:
+        G = graphs[cuisine]
+        weights.append(G[edge[0]][edge[1]]["weight"] if G.has_edge(*edge) else 0)
+    mean_weight = np.mean(weights)
+    std_weight = np.std(weights)
+    z_scores = [0 for _ in weights] if std_weight == 0 else [(w - mean_weight) / std_weight for w in weights]
+    zscore_dict[edge] = z_scores
+
+# ---------------------------------------------------------------------
+# Long-form DataFrame: one row per cuisine x edge
+# ---------------------------------------------------------------------
+data_list = []
+for i, cuisine in enumerate(cuisines):
+    for edge, z_scores in zscore_dict.items():
+        data_list.append([cuisine, labels[i], cuisine_to_continents[cuisine], edge, z_scores[i]])
+
+edge_df = pd.DataFrame(data_list, columns=["Cuisine", "Cuisine Label", "Continent", "Edge", "Z-Score"])
+
+# ---------------------------------------------------------------------
+# Choose highlights automatically: per cuisine, max and min z-score edge
+# ---------------------------------------------------------------------
+edge_df["Highlight"] = False
+edge_df["Info"] = ""
+highlight_rows = []
+for cuisine in cuisines:
+    sub = edge_df[edge_df["Cuisine"] == cuisine]
+    if sub.empty:
+        continue
+    max_idx = sub["Z-Score"].idxmax()
+    min_idx = sub["Z-Score"].idxmin()
+    for idx, kind in [(max_idx, "high"), (min_idx, "low")]:
+        edge_df.loc[idx, "Highlight"] = True
+        e = edge_df.loc[idx, "Edge"]
+        pair = tuple(sorted(e))
+        count = int(pair_counts[cuisine].get(pair, 0))
+        info = f"{e[0]}-{e[1]} ({count})"
+        edge_df.loc[idx, "Info"] = info
+        highlight_rows.append((cuisine, kind, info, float(edge_df.loc[idx, "Z-Score"])))
+
+highlighted = edge_df[edge_df["Highlight"]].copy()
+
+# ---------------------------------------------------------------------
+# Plot
+# ---------------------------------------------------------------------
+def draw_background_regions(ax, Delta_tau, t_min, t_max, color, alpha):
+    t_old = t_min
+    t_next = t_old + Delta_tau
+    while t_old < t_max:
+        ax.axvspan(t_old, t_next, ymin=0, ymax=1, color=color, alpha=alpha, zorder=1)
+        t_old = t_old + 2 * Delta_tau
+        t_next = t_next + 2 * Delta_tau
+
+fig, ax = plt.subplots(figsize=(21, len(cuisines) * 2.5))
+
+# Base strip plot (all edges)
+sns.stripplot(
+    x="Z-Score",
+    y="Cuisine Label",
+    data=edge_df,
+    size=6,
+    hue="Cuisine",
+    palette=cuisine_to_colors,
+    jitter=0.175,
+    alpha=0.25,
+    ax=ax,
+    legend=False,
+ )
+
+# Overlay highlights
+sns.stripplot(
+    x="Z-Score",
+    y="Cuisine Label",
+    data=highlighted,
+    size=7,
+    hue="Cuisine",
+    palette=cuisine_to_colors,
+    jitter=0.175,
+    alpha=1,
+    edgecolor="black",
+    linewidth=1.5,
+    ax=ax,
+    legend=False,
+ )
+
+# Annotate: exactly two per cuisine, offset up/down to reduce overlap
+for cuisine, kind, info, z in highlight_rows:
+    y = label_to_y[labels[cuisines.index(cuisine)]]
+    dy = 0.18 if kind == "high" else -0.18
+    dx = 0.35 if z >= 0 else -0.35
+    ha = "left" if z >= 0 else "right"
+    ax.annotate(
+        info,
+        xy=(z, y),
+        xytext=(z + dx, y + dy),
+        arrowprops=dict(facecolor="black", width=0.8, headwidth=4, alpha=0.6, connectionstyle="arc3,rad=0"),
+        fontsize=12,
+        ha=ha,
+        va="center",
+)
+
+draw_background_regions(ax, Delta_tau=1, t_min=-4, t_max=-1, color="lightgray", alpha=0.25)
+draw_background_regions(ax, Delta_tau=1, t_min=1, t_max=5, color="lightgray", alpha=0.25)
+
+ax.axvline(x=0, ymin=0, ymax=1, alpha=1, color="black", linewidth=1, zorder=0)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.set_yticks(range(len(labels)))
+ax.set_yticklabels(labels)
+ax.tick_params(axis="both", which="major", labelsize=20)
+ax.set_xlabel("Z-Score", fontsize=22)
+ax.set_ylabel("Cuisine", fontsize=22)
+
+os.makedirs("figures/type_graphs", exist_ok=True)
+plt.savefig("figures/type_graphs/z_score_stripplot.svg", bbox_inches="tight")
+plt.show()
+
+=== Cell 77 (code) ===
+!apt-get install graphviz graphviz-dev -y
+!pip install pygraphviz
+!pip install cairosvg
+!pip install svg.path
+
+
+=== Cell 78 (code) ===
+"""
+Generate Maximum Spanning Trees (MSTs) from ingredient-type (category) graphs.
+
+This script:
+1) Loads per-cuisine category co-occurrence graphs (type graphs).
+2) Normalizes edge weights within each graph so they sum to 1.
+3) Computes the Maximum Spanning Tree (MST) for each cuisine graph.
+4) Saves a dictionary {cuisine: MST graph} to disk.
+
+Inputs
+------
+- post_processed_data/nx_category_graph_dict_from_edgelist.pickle
+    Dict: cuisine -> NetworkX weighted Graph (edge attribute 'weight').
+
+Outputs
+-------
+- post_processed_data/max_spanning_tree_dict.pickle
+    Dict: cuisine -> NetworkX Graph (MST).
+
+Notes
+-----
+- Behavior preserved except:
+  * Removed Minimum Spanning Tree generation as requested.
+  * Removed unused imports.
+  * Paths updated to repo-friendly locations.
+"""
+
+import os
+import pickle
+import networkx as nx
+
+
+# ---------------------------------------------------------------------
+# Helper: normalize weights in-place so total edge weight = 1 per graph
+# ---------------------------------------------------------------------
+def normalize_weights(graph: nx.Graph) -> None:
+    total_weight = sum(weight for _, _, weight in graph.edges.data("weight"))
+    for u, v, data in graph.edges(data=True):
+        data["weight"] /= total_weight
+
+
+# ---------------------------------------------------------------------
+# Load category graphs
+# ---------------------------------------------------------------------
+input_path = "post_processed_data/nx_category_graph_dict_from_edgelist.pickle"
+with open(input_path, "rb") as f:
+    category_graph_dict = pickle.load(f)
+
+# ---------------------------------------------------------------------
+# Build MSTs per cuisine
+# ---------------------------------------------------------------------
+max_span_tree_dict = {}
+
+for cuisine, graph in category_graph_dict.items():
+    # Normalize weights before computing MST
+    normalize_weights(graph)
+
+    # Compute Maximum Spanning Tree using edge attribute 'weight'
+    max_spanning_tree = nx.maximum_spanning_tree(graph, algorithm="kruskal", weight="weight")
+    max_span_tree_dict[cuisine] = max_spanning_tree
+
+# ---------------------------------------------------------------------
+# Save results
+# ---------------------------------------------------------------------
+os.makedirs("post_processed_data", exist_ok=True)
+with open("post_processed_data/max_spanning_tree_dict.pickle", "wb") as f:
+    pickle.dump(max_span_tree_dict, f)
+
+=== Cell 79 (code) ===
+"""
+Plot Maximum Spanning Trees (MSTs) of ingredient-type graphs per cuisine.
+
+This script loads:
+1) The recipe–ingredient bipartite graphs (for category frequency sizing).
+2) A precomputed dictionary of per-cuisine Maximum Spanning Trees (MSTs)
+   of ingredient-type co-occurrence graphs.
+
+For each cuisine, it:
+- Computes node sizes from category frequencies across recipes.
+- Draws the MST with category-colored nodes and weighted edges.
+- Places category SVG icons near nodes along incident edges.
+- Saves an SVG figure per cuisine.
+
+
+Inputs
+------
+- post_processed_data/graph_dict_from_edgelist.pkl
+    A dict: cuisine -> NetworkX MultiGraph (bipartite), with ingredients (bipartite=1)
+    carrying node attribute 'category'.
+- post_processed_data/max_spanning_tree_dict.pickle
+    A dict: cuisine -> NetworkX Graph (MST) with edge attribute 'weight'.
+- figures/category_symbols/<Category>.svg
+    SVG icon for each ingredient category key listed in `color_dict`.
+
+Outputs
+-------
+- figures/type_graphs/max_spanning_trees/<cuisine>.svg
+
+Notes
+-----
+- The MST positions are generated using graphviz 'twopi' layout via pygraphviz.
+- Node sizes are proportional to per-category frequency across all recipes
+  in the corresponding cuisine bipartite graph.
+- Ensure the output directory exists before running this script.
+"""
+
+import os
+import io
+import pickle
+import pygraphviz as pgv  # required for 'twopi' layout through networkx-agraph
+import cairosvg
+# import seaborn as sns  # kept for environment parity, not used directly
+import networkx as nx
+import numpy as np
+from matplotlib import pyplot as plt
+# from adjustText import adjust_text  # kept for environment parity, not used directly
+# from matplotlib.textpath import TextToPath  # kept for environment parity, not used directly
+# from matplotlib.text import Text  # kept for environment parity, not used directly
+# from matplotlib.patheffects import withStroke  # kept for environment parity, not used directly
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+# from svg.path import parse_path  # kept for environment parity, not used directly
+# from matplotlib.bezier import BezierSegment  # kept for environment parity, not used directly
+
+# ---------------------------------------------------------------------
+# Visualization palette: category -> color
+# ---------------------------------------------------------------------
+color_dict = {
+    "Fish": "#1F78B4",
+    "Meat": "#c44240",
+    "Legume": "#E6AB02",
+    "Seafood": "#A6CEE3",
+    "Fruit": "#f97306",
+    "Cereal": "#FDBF6F",
+    "Vegetable": "#33A02C",
+    "Herb": "#B2Df8A",
+    "Fungus": "#BA9E88",
+    "Plant": "#1B9E77",
+    "Bakery": "#FFFF99",
+    "Maize": "#F4D054",
+    "Flower": "#fe86a4",
+    "Nuts And Seeds": "#645403",
+    "Beverage Alcoholic": "#8c0034",
+    "Beverage": "#CAB2D6",
+    "Additive": "#d3d3d3",
+    "Essential Oil": "#677A04",
+    "Spice": "#C49C94",
+    "Dairy": "#FFF39A",
+    "Condiment": "#FF7F00",
+    "Dish": "#6A3D9A"
+}
+
+# ---------------------------------------------------------------------
+# Icon directory (repo-friendly path). One SVG per category name key above.
+# ---------------------------------------------------------------------
+svg_directory = "category_symbols/"
+def normalize(x):
+    return x.strip().lower().replace(" ", "_")
+
+# Preload SVG file paths for categories
+category_svg_dict = {}
+for category in color_dict.keys():
+    svg_file_path = os.path.join(svg_directory, f"{category}.svg")
+    if os.path.exists(svg_file_path):
+        category_svg_dict[normalize(category)] = svg_file_path
+
+# ---------------------------------------------------------------------
+# Load data (repo-friendly paths)
+# ---------------------------------------------------------------------
+# Bipartite cuisine graphs (recipes ↔ ingredients with 'category' on ingredients)
+graph_dict = pickle.load(open("post_processed_data/graph_dict_from_edgelist.pkl", "rb"))
+
+# Precomputed MSTs of ingredient-type graphs
+max_span_tree_dict = pickle.load(open("post_processed_data/max_spanning_tree_dict.pickle", "rb"))
+
+# Collect the set of all ingredient categories across cuisines
+ing_categories = np.unique(
+    np.hstack(
+        [
+            [d["category"] for n, d in graph_dict[cuisine].nodes(data=True) if d["bipartite"] == 1]
+            for cuisine in graph_dict.keys()
+        ]
+    )
+)
+nx_category_graph_dict = {}
+
+# ---------------------------------------------------------------------
+# Plot per-cuisine MSTs
+# ---------------------------------------------------------------------
+for cuisine in graph_dict.keys():
+    fig, ax = plt.subplots(figsize=(15, 15))
+
+    max_span_tree = max_span_tree_dict[cuisine]
+    cuisine_graph = graph_dict[cuisine]
+
+    # Count category occurrences across recipes (for node sizing)
+    counter_dict = {key: 0 for key in ing_categories}
+
+    recipes = {n for n, d in cuisine_graph.nodes(data=True) if d["bipartite"] == 0}
+    ingredients = {n: d["category"] for n, d in cuisine_graph.nodes(data=True) if d["bipartite"] == 1}
+
+    for recipe in recipes:
+        category_list = list(ingredients[key] for key in list(cuisine_graph.neighbors(recipe)))
+        for cat in category_list:
+            counter_dict[cat] += 1
+
+    norm_factor = sum(list(counter_dict.values()))
+    freq_dict = {key: val / norm_factor for key, val in counter_dict.items()}
+
+    # Node sizes proportional to category frequency
+    node_sizes = np.array(list(freq_dict[node] for node in max_span_tree.nodes())) * 5000
+    sel_weights = nx.get_edge_attributes(max_span_tree, "weight").values()
+
+    # Use Graphviz 'twopi' (radial) layout via pygraphviz
+    graph_dot = nx.drawing.nx_agraph.to_agraph(max_span_tree)
+    graph_dot.layout(prog="twopi")
+    pos = {
+        n: (
+            float(graph_dot.get_node(n).attr["pos"].split(",")[0]),
+            float(graph_dot.get_node(n).attr["pos"].split(",")[1]),
+        )
+        for n in graph_dot.nodes()
+    }
+
+    # Node colors ordered by node iteration
+    ordered_colors = [
+        color_dict.get(category.title(), "#999999")  # fallback gray
+        for category in max_span_tree.nodes()
+    ]
+    # Draw nodes and edges
+    nx.draw_networkx_nodes(
+        max_span_tree,
+        pos,
+        ax=ax,
+        label=True,
+        node_size=node_sizes,
+        alpha=1,
+        node_color=ordered_colors,
+        edgecolors="black",
+        linewidths=2,
+    )
+  #   nx.draw_networkx_labels(
+  #   max_span_tree,
+  #   pos,
+  #   font_size=14,
+  #   font_color="black"
+  # )
+
+    nx.draw_networkx_edges(
+        max_span_tree,
+        pos,
+        ax=ax,
+        width=300 * np.array(list(sel_weights), dtype="float64"),
+        edge_color="grey",
+        alpha=0.6,
+    )
+
+    # Place category icons near nodes along incident edges
+    drawn_nodes = set()
+
+    for node in max_span_tree.nodes():
+
+        if node in drawn_nodes:
+            continue
+
+        x, y = pos[node]
+
+        svg_file_path = category_svg_dict.get(normalize(node))
+
+        if svg_file_path:
+            png_data = cairosvg.svg2png(url=svg_file_path, output_width=50, output_height=50)
+            image = OffsetImage(plt.imread(io.BytesIO(png_data)), zoom=0.9)
+            ab = AnnotationBbox(image, (x, y), frameon=False)
+            ax.add_artist(ab)
+        else:
+            print(f"Missing SVG for: {node}")
+
+        drawn_nodes.add(node)
+
+    # Title and axes
+    ax.set_title(cuisine.replace("_", " ").title(), y=-0.1, fontsize=50, color="black")
+    ax.set_axis_off()
+    os.makedirs("figures/type_graphs/max_spanning_trees", exist_ok=True)
+
+    # Save figure (repo-friendly path)
+    plt.savefig(f"figures/type_graphs/max_spanning_trees/{cuisine}.svg", bbox_inches="tight")
+    plt.show()
+
+=== Cell 80 (code) ===
+import pandas as pd
+import itertools
+import networkx as nx
+import numpy as np
+
+# Load data
+df = pd.read_csv("ingredient_edgelist.csv")
+
+# Clean columns
+df.columns = df.columns.str.strip().str.lower()
+
+# Group by cuisine
+cuisines = df["cuisine"].unique()
+
+results = []
+
+
+import pickle
+
+category_graph_dict = pickle.load(
+    open("post_processed_data/nx_category_graph_dict_from_edgelist.pickle", "rb")
+)
+
+results = []
+
+for cuisine, G in category_graph_dict.items():
+
+    if G.number_of_edges() == 0:
+        continue
+
+    edges = [(u, v, d["weight"]) for u, v, d in G.edges(data=True)]
+    edges_sorted = sorted(edges, key=lambda x: x[2], reverse=True)
+
+    total_weight = sum(w for _, _, w in edges_sorted)
+
+    top5 = edges_sorted[:5]
+    top50 = edges_sorted[:50]
+
+    top5_fraction = sum(w for _, _, w in top5) / total_weight
+    top50_fraction = sum(w for _, _, w in top50) / total_weight
+
+    top5_pairs = [f"{u} - {v}" for u, v, _ in top5]
+
+    results.append([
+        cuisine,
+        ", ".join(top5_pairs),
+        round(top5_fraction, 2),
+        round(top50_fraction, 2)
+    ])
+
+# Create table
+table_df = pd.DataFrame(
+    results,
+    columns=["Cuisine", "Top 5 Edges", "Top 5 Weight Fraction", "Top 50 Weight Fraction"]
+)
+pd.set_option('display.max_colwidth', None)
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_columns', None)
+table_df = table_df.sort_values("Cuisine").reset_index(drop=True)
+import os
+from IPython.display import display, HTML
+
+ICON_FOLDER = "category_symbols"  # folder name
+
+import base64
+
+def normalize(x):
+    return x.strip().title()   # VERY IMPORTANT
+
+def pair_to_icons(pair_string):
+    parts = pair_string.split(" - ")
+    html = ""
+
+    for part in parts:
+        filename = normalize(part) + ".svg"
+        img_path = os.path.join(ICON_FOLDER, filename)
+
+        if os.path.exists(img_path):
+            with open(img_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode()
+
+            html += f'<img src="data:image/svg+xml;base64,{encoded}" width="28" style="vertical-align:middle;"> '
+        else:
+            print("❌ Missing:", img_path)   # DEBUG
+            html += part + " "
+
+    return html.strip()
+
+def convert_top5_to_icons(edge_string):
+    pairs = edge_string.split(",")
+    return " , ".join(pair_to_icons(p.strip()) for p in pairs)
+
+
+# Apply conversion
+table_df["Top 5 Edges"] = table_df["Top 5 Edges"].apply(convert_top5_to_icons)
+
+# Convert to HTML table
+html_table = table_df.to_html(escape=False, index=False)
+
+display(HTML(html_table))
+
+
+# display(table_df)   # instead of print(table_df)
+
+
+=== Cell 81 (code) ===
+import pickle
+import numpy as np
+import pandas as pd
+import networkx as nx
+
+# Load category graphs (NOT MST)
+category_graph_dict = pickle.load(
+    open("post_processed_data/nx_category_graph_dict_from_edgelist.pickle", "rb")
+)
+def normalize_graph(G):
+    total_weight = sum(d["weight"] for _, _, d in G.edges(data=True))
+    if total_weight == 0:
+        return G
+    for u, v, d in G.edges(data=True):
+        d["weight"] = d["weight"] / total_weight
+    return G
+from collections import defaultdict
+
+pair_weights = defaultdict(list)
+
+for cuisine, G in category_graph_dict.items():
+
+    G = normalize_graph(G.copy())
+
+    for u, v, d in G.edges(data=True):
+
+        pair = tuple(sorted([u, v]))  # ensure consistent ordering
+
+        pair_weights[pair].append(d["weight"])
+results = []
+
+for pair, weights in pair_weights.items():
+
+    avg_weight = np.mean(weights)
+    std_weight = np.std(weights)
+
+    results.append([
+        f"{pair[0]} - {pair[1]}",
+        avg_weight,
+        std_weight
+    ])
+
+table_df = pd.DataFrame(
+    results,
+    columns=["Type Pair", "Average Weight", "St. Dev."]
+)
+table_df["Average Weight"] = table_df["Average Weight"].round(3)
+table_df["St. Dev."] = table_df["St. Dev."].round(3)
+
+top_avg = table_df.sort_values(
+    "Average Weight",
+    ascending=False
+).head(10)
+top_std = table_df.sort_values(
+    "St. Dev.",
+    ascending=False
+).head(10)
+top_std = top_std[["Type Pair", "St. Dev.", "Average Weight"]]
+
+print("Top 10 by Average Weight")
+display(top_avg)
+
+print("Top 10 by Standard Deviation")
+display(top_std)
+
+

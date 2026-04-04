@@ -9240,9 +9240,9 @@
       <data key="d2">red pepper flake</data>
       <data key="d3">vegetable</data>
     </node>
-    <node id="chocolate wafer cookie">
+    <node id="chocolate wafer cooky">
       <data key="d0">1</data>
-      <data key="d2">chocolate wafer cookie</data>
+      <data key="d2">chocolate wafer cooky</data>
       <data key="d3">bakery</data>
     </node>
     <node id="60771">
@@ -54810,7 +54810,7 @@
     <edge source="lamb chop" target="69873" id="0" />
     <edge source="60742" target="queso blanco" id="0" />
     <edge source="60770" target="red pepper flake" id="0" />
-    <edge source="60770" target="chocolate wafer cookie" id="0" />
+    <edge source="60770" target="chocolate wafer cooky" id="0" />
     <edge source="60781" target="pepper sauce" id="0" />
     <edge source="pepper sauce" target="60852" id="0" />
     <edge source="pepper sauce" target="60932" id="0" />

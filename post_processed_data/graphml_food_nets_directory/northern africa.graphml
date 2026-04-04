@@ -2401,9 +2401,9 @@
       <data key="d0">0</data>
       <data key="d1">northern africa</data>
     </node>
-    <node id="chocolate wafer cookie">
+    <node id="chocolate wafer cooky">
       <data key="d0">1</data>
-      <data key="d2">chocolate wafer cookie</data>
+      <data key="d2">chocolate wafer cooky</data>
       <data key="d3">bakery</data>
     </node>
     <node id="49662">
@@ -26468,7 +26468,7 @@
     <edge source="lemongrass" target="50877" id="0" />
     <edge source="lemongrass" target="50995" id="0" />
     <edge source="49659" target="chuck roast" id="0" />
-    <edge source="49661" target="chocolate wafer cookie" id="0" />
+    <edge source="49661" target="chocolate wafer cooky" id="0" />
     <edge source="49663" target="lamb" id="0" />
     <edge source="49663" target="leek" id="0" />
     <edge source="lamb" target="49689" id="0" />

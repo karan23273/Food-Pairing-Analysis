@@ -10,7 +10,7 @@
       <data key="d0">0.21683744115203885</data>
     </node>
     <node id="beverage">
-      <data key="d0">0.23926890058156014</data>
+      <data key="d0">0.2400996953752461</data>
     </node>
     <node id="beverage alcoholic">
       <data key="d0">0.10163389642758382</data>
@@ -37,7 +37,7 @@
       <data key="d0">0.026516200498477017</data>
     </node>
     <node id="fruit">
-      <data key="d0">0.22923013015785462</data>
+      <data key="d0">0.22839933536416865</data>
     </node>
     <node id="fungus">
       <data key="d0">0.10654943229022583</data>
@@ -88,7 +88,7 @@
       <data key="d1">690</data>
     </edge>
     <edge source="additive" target="fruit">
-      <data key="d1">2240</data>
+      <data key="d1">2235</data>
     </edge>
     <edge source="additive" target="vegetable">
       <data key="d1">8086</data>
@@ -103,7 +103,7 @@
       <data key="d1">4802</data>
     </edge>
     <edge source="additive" target="beverage">
-      <data key="d1">2412</data>
+      <data key="d1">2418</data>
     </edge>
     <edge source="additive" target="nuts and seeds">
       <data key="d1">1034</data>
@@ -166,7 +166,7 @@
       <data key="d1">289</data>
     </edge>
     <edge source="bakery" target="beverage">
-      <data key="d1">684</data>
+      <data key="d1">686</data>
     </edge>
     <edge source="bakery" target="cereal">
       <data key="d1">903</data>
@@ -193,64 +193,64 @@
       <data key="d1">84</data>
     </edge>
     <edge source="bakery" target="fruit">
-      <data key="d1">667</data>
+      <data key="d1">665</data>
     </edge>
     <edge source="bakery" target="flower">
       <data key="d1">94</data>
     </edge>
     <edge source="beverage" target="plant">
-      <data key="d1">1209</data>
+      <data key="d1">1212</data>
     </edge>
     <edge source="beverage" target="dairy">
-      <data key="d1">2533</data>
+      <data key="d1">2542</data>
     </edge>
     <edge source="beverage" target="nuts and seeds">
       <data key="d1">367</data>
     </edge>
     <edge source="beverage" target="meat">
-      <data key="d1">2050</data>
+      <data key="d1">2058</data>
     </edge>
     <edge source="beverage" target="spice">
-      <data key="d1">2347</data>
+      <data key="d1">2354</data>
     </edge>
     <edge source="beverage" target="vegetable">
-      <data key="d1">2839</data>
+      <data key="d1">2849</data>
     </edge>
     <edge source="beverage" target="cereal">
-      <data key="d1">1153</data>
+      <data key="d1">1157</data>
     </edge>
     <edge source="beverage" target="seafood">
-      <data key="d1">667</data>
+      <data key="d1">668</data>
     </edge>
     <edge source="beverage" target="herb">
-      <data key="d1">2147</data>
+      <data key="d1">2155</data>
     </edge>
     <edge source="beverage" target="condiment">
-      <data key="d1">707</data>
+      <data key="d1">711</data>
     </edge>
     <edge source="beverage" target="beverage alcoholic">
-      <data key="d1">339</data>
+      <data key="d1">341</data>
     </edge>
     <edge source="beverage" target="fungus">
-      <data key="d1">317</data>
+      <data key="d1">318</data>
     </edge>
     <edge source="beverage" target="beverage">
-      <data key="d1">316</data>
+      <data key="d1">321</data>
     </edge>
     <edge source="beverage" target="legume">
-      <data key="d1">504</data>
+      <data key="d1">506</data>
     </edge>
     <edge source="beverage" target="fruit">
       <data key="d1">764</data>
     </edge>
     <edge source="beverage" target="dish">
-      <data key="d1">309</data>
+      <data key="d1">312</data>
     </edge>
     <edge source="beverage" target="maize">
-      <data key="d1">264</data>
+      <data key="d1">265</data>
     </edge>
     <edge source="beverage" target="essential oil">
-      <data key="d1">129</data>
+      <data key="d1">132</data>
     </edge>
     <edge source="beverage" target="flower">
       <data key="d1">106</data>
@@ -289,7 +289,7 @@
       <data key="d1">440</data>
     </edge>
     <edge source="beverage alcoholic" target="fruit">
-      <data key="d1">356</data>
+      <data key="d1">354</data>
     </edge>
     <edge source="beverage alcoholic" target="seafood">
       <data key="d1">245</data>
@@ -331,7 +331,7 @@
       <data key="d1">400</data>
     </edge>
     <edge source="cereal" target="fruit">
-      <data key="d1">1140</data>
+      <data key="d1">1136</data>
     </edge>
     <edge source="cereal" target="vegetable">
       <data key="d1">3596</data>
@@ -379,7 +379,7 @@
       <data key="d1">1754</data>
     </edge>
     <edge source="condiment" target="fruit">
-      <data key="d1">651</data>
+      <data key="d1">647</data>
     </edge>
     <edge source="condiment" target="meat">
       <data key="d1">1892</data>
@@ -430,7 +430,7 @@
       <data key="d1">6663</data>
     </edge>
     <edge source="dairy" target="fruit">
-      <data key="d1">2229</data>
+      <data key="d1">2219</data>
     </edge>
     <edge source="dairy" target="meat">
       <data key="d1">6153</data>
@@ -499,7 +499,7 @@
       <data key="d1">50</data>
     </edge>
     <edge source="dish" target="fruit">
-      <data key="d1">310</data>
+      <data key="d1">308</data>
     </edge>
     <edge source="dish" target="nuts and seeds">
       <data key="d1">127</data>
@@ -541,7 +541,7 @@
       <data key="d1">45</data>
     </edge>
     <edge source="essential oil" target="fruit">
-      <data key="d1">146</data>
+      <data key="d1">142</data>
     </edge>
     <edge source="essential oil" target="nuts and seeds">
       <data key="d1">27</data>
@@ -631,34 +631,34 @@
       <data key="d1">2</data>
     </edge>
     <edge source="fruit" target="maize">
-      <data key="d1">251</data>
+      <data key="d1">249</data>
     </edge>
     <edge source="fruit" target="spice">
-      <data key="d1">2083</data>
+      <data key="d1">2076</data>
     </edge>
     <edge source="fruit" target="herb">
-      <data key="d1">2017</data>
+      <data key="d1">2010</data>
     </edge>
     <edge source="fruit" target="meat">
-      <data key="d1">1978</data>
+      <data key="d1">1971</data>
     </edge>
     <edge source="fruit" target="vegetable">
-      <data key="d1">2623</data>
+      <data key="d1">2613</data>
     </edge>
     <edge source="fruit" target="plant">
-      <data key="d1">1129</data>
+      <data key="d1">1124</data>
     </edge>
     <edge source="fruit" target="legume">
-      <data key="d1">449</data>
+      <data key="d1">446</data>
     </edge>
     <edge source="fruit" target="seafood">
-      <data key="d1">602</data>
+      <data key="d1">599</data>
     </edge>
     <edge source="fruit" target="fungus">
-      <data key="d1">291</data>
+      <data key="d1">290</data>
     </edge>
     <edge source="fruit" target="fruit">
-      <data key="d1">370</data>
+      <data key="d1">366</data>
     </edge>
     <edge source="fruit" target="nuts and seeds">
       <data key="d1">355</data>

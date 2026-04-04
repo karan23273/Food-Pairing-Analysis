@@ -10075,11 +10075,6 @@
       <data key="d0">0</data>
       <data key="d1">rest africa</data>
     </node>
-    <node id="rotell">
-      <data key="d0">1</data>
-      <data key="d2">rotell</data>
-      <data key="d3">cereal</data>
-    </node>
     <node id="kaffir lime leaf">
       <data key="d0">1</data>
       <data key="d2">kaffir lime leaf</data>
@@ -11459,11 +11454,6 @@
     <node id="49318">
       <data key="d0">0</data>
       <data key="d1">rest africa</data>
-    </node>
-    <node id="barlett pear">
-      <data key="d0">1</data>
-      <data key="d2">barlett pear</data>
-      <data key="d3">fruit</data>
     </node>
     <node id="49319">
       <data key="d0">0</data>
@@ -30222,6 +30212,7 @@
     <edge source="pasta" target="48808" id="0" />
     <edge source="pasta" target="48860" id="0" />
     <edge source="pasta" target="49002" id="0" />
+    <edge source="pasta" target="49013" id="0" />
     <edge source="pasta" target="49034" id="0" />
     <edge source="pasta" target="49064" id="0" />
     <edge source="pasta" target="49126" id="0" />
@@ -38172,6 +38163,7 @@
     <edge source="pear" target="48346" id="0" />
     <edge source="pear" target="48681" id="0" />
     <edge source="pear" target="49195" id="0" />
+    <edge source="pear" target="49318" id="0" />
     <edge source="pear" target="51566" id="0" />
     <edge source="pear" target="51643" id="0" />
     <edge source="47571" target="raspberry" id="0" />
@@ -40039,7 +40031,6 @@
     <edge source="49005" target="sultana raisin" id="0" />
     <edge source="sultana raisin" target="49456" id="0" />
     <edge source="49012" target="herring" id="0" />
-    <edge source="49013" target="rotell" id="0" />
     <edge source="49013" target="kaffir lime leaf" id="0" />
     <edge source="kaffir lime leaf" target="51096" id="0" />
     <edge source="kaffir lime leaf" target="51195" id="0" />
@@ -40091,7 +40082,6 @@
     <edge source="littleneck clam" target="51216" id="0" />
     <edge source="49285" target="crawfish" id="0" />
     <edge source="49309" target="rotini" id="0" />
-    <edge source="49318" target="barlett pear" id="0" />
     <edge source="49319" target="amarula" id="0" />
     <edge source="49328" target="chile con queso" id="0" />
     <edge source="49333" target="hoisin sauce" id="0" />

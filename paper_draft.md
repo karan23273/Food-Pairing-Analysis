@@ -1,10 +1,10 @@
 # Food Pairing Analysis Across Cuisines Using a New Recipe Dataset
 
-Authors: [Add author names and affiliations]
+Authors:
 
 ## Abstract
 
-Food pairing research studies how ingredients co-occur within recipes and how these patterns vary across cuisines. We present a first analysis using a newly curated recipe dataset derived from RecipeDB1, with standardized ingredient names and harmonized food categories. We construct recipe-ingredient bipartite graphs and project them to ingredient-type co-occurrence graphs per cuisine. We then analyze recipe size distributions, ingredient type profiles, and statistically significant co-occurrence backbones. Results highlight cuisine-specific signatures and shared global structure while providing a reproducible pipeline for cross-cuisine comparison. [Replace with concrete numbers and main findings after final analysis.]
+Food pairing research studies how ingredients co-occur within recipes and how these patterns vary across cuisines. We present a first analysis using a newly curated recipe dataset derived from RecipeDB1, with standardized ingredient names and harmonized food categories. We construct recipe-ingredient bipartite graphs and project them to ingredient-type co-occurrence graphs per cuisine. We then analyze recipe size distributions, ingredient type profiles, and statistically significant co-occurrence backbones. Results highlight cuisine-specific signatures and shared global structure while providing a reproducible pipeline for cross-cuisine comparison. 
 
 ## Keywords
 
@@ -48,10 +48,10 @@ We rename columns and join aliases→ingredients→recipes to build a recipe–i
 
 After cleaning and merging (to be updated after execution):
 
-- Number of recipes: [N_RECIPES]
-- Number of cuisines: [N_CUISINES]
-- Number of unique canonical ingredients: [N_INGREDIENTS]
-- Number of ingredient categories: [N_CATEGORIES]
+- Number of recipes:
+- Number of cuisines:
+- Number of unique canonical ingredients:
+- Number of ingredient categories:
 
 ## 4. Methods
 

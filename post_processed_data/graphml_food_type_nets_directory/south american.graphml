@@ -184,7 +184,7 @@
       <data key="d1">328</data>
     </edge>
     <edge source="bakery" target="bakery">
-      <data key="d1">146</data>
+      <data key="d1">145</data>
     </edge>
     <edge source="bakery" target="seafood">
       <data key="d1">121</data>

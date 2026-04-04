@@ -12479,9 +12479,9 @@
       <data key="d0">0</data>
       <data key="d1">deutschland</data>
     </node>
-    <node id="chocolate wafer cookie">
+    <node id="chocolate wafer cooky">
       <data key="d0">1</data>
-      <data key="d2">chocolate wafer cookie</data>
+      <data key="d2">chocolate wafer cooky</data>
       <data key="d3">bakery</data>
     </node>
     <node id="137034">
@@ -59031,9 +59031,9 @@
     <edge source="burger" target="138348" id="0" />
     <edge source="137019" target="littleneck clam" id="0" />
     <edge source="littleneck clam" target="137774" id="0" />
-    <edge source="137033" target="chocolate wafer cookie" id="0" />
-    <edge source="chocolate wafer cookie" target="139111" id="0" />
-    <edge source="chocolate wafer cookie" target="139149" id="0" />
+    <edge source="137033" target="chocolate wafer cooky" id="0" />
+    <edge source="chocolate wafer cooky" target="139111" id="0" />
+    <edge source="chocolate wafer cooky" target="139149" id="0" />
     <edge source="137037" target="meatloaf" id="0" />
     <edge source="137053" target="corn chip" id="0" />
     <edge source="137054" target="lunch meat" id="0" />

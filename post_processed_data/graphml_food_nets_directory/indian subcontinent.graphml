@@ -9347,11 +9347,6 @@
       <data key="d0">0</data>
       <data key="d1">indian subcontinent</data>
     </node>
-    <node id="barlett pear">
-      <data key="d0">1</data>
-      <data key="d2">barlett pear</data>
-      <data key="d3">fruit</data>
-    </node>
     <node id="64506">
       <data key="d0">0</data>
       <data key="d1">indian subcontinent</data>
@@ -18820,9 +18815,9 @@
       <data key="d0">0</data>
       <data key="d1">indian subcontinent</data>
     </node>
-    <node id="venison">
+    <node id="deer meat">
       <data key="d0">1</data>
-      <data key="d2">venison</data>
+      <data key="d2">deer meat</data>
       <data key="d3">meat</data>
     </node>
     <node id="66633">
@@ -79087,6 +79082,7 @@
     <edge source="pear" target="64246" id="0" />
     <edge source="pear" target="64428" id="0" />
     <edge source="pear" target="64466" id="0" />
+    <edge source="pear" target="64505" id="0" />
     <edge source="pear" target="64854" id="0" />
     <edge source="pear" target="65368" id="0" />
     <edge source="pear" target="65497" id="0" />
@@ -79094,10 +79090,12 @@
     <edge source="pear" target="65614" id="0" />
     <edge source="pear" target="65722" id="0" />
     <edge source="pear" target="66561" id="0" />
+    <edge source="pear" target="66672" id="0" />
     <edge source="pear" target="66727" id="0" />
     <edge source="pear" target="66834" id="0" />
     <edge source="pear" target="68227" id="0" />
     <edge source="pear" target="68322" id="0" />
+    <edge source="pear" target="68447" id="0" />
     <edge source="pear" target="72177" id="0" />
     <edge source="salt" target="4059" id="0" />
     <edge source="salt" target="4077" id="0" />
@@ -98779,9 +98777,6 @@
     <edge source="rum" target="66076" id="0" />
     <edge source="rum" target="67483" id="0" />
     <edge source="rum" target="68453" id="0" />
-    <edge source="64505" target="barlett pear" id="0" />
-    <edge source="barlett pear" target="66672" id="0" />
-    <edge source="barlett pear" target="68447" id="0" />
     <edge source="64506" target="chestnut" id="0" />
     <edge source="chestnut" target="65391" id="0" />
     <edge source="chestnut" target="66206" id="0" />
@@ -99351,8 +99346,8 @@
     <edge source="66614" target="golden syrup" id="0" />
     <edge source="golden syrup" target="67534" id="0" />
     <edge source="66622" target="rocket" id="0" />
-    <edge source="66632" target="venison" id="0" />
-    <edge source="venison" target="67187" id="0" />
+    <edge source="66632" target="deer meat" id="0" />
+    <edge source="deer meat" target="67187" id="0" />
     <edge source="66652" target="chili paste" id="0" />
     <edge source="chili paste" target="67520" id="0" />
     <edge source="chili paste" target="67897" id="0" />
