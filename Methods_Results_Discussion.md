@@ -1,116 +1,39 @@
-# Methods
+# Universal Statistical Laws Governing Culinary Design
 
-## Dataset
+XYZ$^1$, XYZ$^1$, XYZ$^1$, and Ganesh Bagler$^{1,2,3,4}$*
 
-The present study draws upon RecipeDB [1, 2], a large-scale structured repository of culinary data curated by the Complex Systems Laboratory (CoSyLab) at IIIT-Delhi. RecipeDB aggregates recipe information from four prominent web-based platforms—AllRecipes [3] (16,177 recipes), Food Network [4] (15,917 recipes), Epicurious [5] (11,069 recipes), and TarlaDalal [6] (2,609 recipes)—yielding a combined corpus of 118,083 recipes after inclusion of extended entries. The dataset encompasses three interlinked relational tables: (i) a *general metadata table* (`RecipeDB1_general.csv`) containing 118,083 recipes annotated with attributes including caloric content, preparation and cooking times, nutritional composition, dietary classifications, geographic region, sub-region, and continental affiliation; (ii) an *ingredient–phrase table* (`RecipeDB1_Ingredient_Phrases.csv`) comprising 1,154,404 ingredient-phrase entries that map each recipe to its constituent ingredients via standardized ingredient identifiers; and (iii) an *ingredient–flavor table* (`RecipeDB1_ingredient_flavor.csv`) cataloguing 19,019 unique ingredient entries, each annotated with a generic canonical name, a DietRx nutritional category, and a FlavorDB sensory link.
+$^1$ Department of Computational Biology, Indraprastha Institute of Information Technology Delhi (IIIT-Delhi), New Delhi 110020, India.
+$^2$ Infosys Center for Artificial Intelligence, IIIT-Delhi, New Delhi 110020, India.
+$^3$ Center of Excellence in Healthcare, IIIT-Delhi, New Delhi 110020, India.
+$^4$ Foodoscope Technologies Private Limited, New Delhi 110048, India.
 
-Recipes in the dataset are organized into 26 regional cuisines spanning 6 continents (African, Asian, Australasian, European, Latin American, and North American), with 75 sub-regional designations capturing finer-grained geographic provenance. The 26 cuisines include: Australian, Belgian, Canadian, Caribbean, Central American, Chinese and Mongolian, Deutschland (German), Eastern European, French, Greek, Indian Subcontinent, Irish, Italian, Japanese, Korean, Mexican, Middle Eastern, Northern Africa, Rest Africa, Scandinavian, South American, Southeast Asian, Spanish and Portuguese, Thai, UK, and US. This geographic breadth, substantially exceeding the 23 cuisines analysed in Caprioli et al. [7], affords a more comprehensive cross-cultural comparison of culinary traditions.
+\*Corresponding Author: bagler@iiitd.ac.in
 
-Each ingredient in the dataset is assigned to one of *T* = 22 culinary categories (hereafter referred to as *ingredient types*), namely: Additive, Bakery, Beverage, Beverage Alcoholic, Cereal, Condiment, Dairy, Dish, Essential Oil, Fish, Flower, Fruit, Fungus, Herb, Legume, Maize, Meat, Nuts and Seeds, Plant, Seafood, Spice, and Vegetable. This classification schema, inherited from the DietRx taxonomy within RecipeDB [1], follows a coherent set of principles grounded in biological origin, dominant culinary function, and degree of processing. Ingredients are primarily categorized by their natural source—for instance, Meat (terrestrial animal tissue), Fish (aquatic vertebrates), Seafood (aquatic invertebrates and marine organisms), and Plant (leaves, stems, and roots)—and secondarily by their prevailing culinary role, whereby aromatic leaves are designated as Herbs, flavoring seeds as Spices, and concentrated botanical extracts as Essential Oils. Items undergoing substantial transformation (e.g., Dairy, Bakery, Beverages) or employed predominantly as process aids (e.g., Additives) are assigned to dedicated classes. Notably, the present classification introduces two additional categories—Condiment and Dish—absent from the 20-type schema employed by Caprioli et al. [7], thereby enabling a more granular differentiation of processed and composite food items.
+---
 
+## Abstract
 
-## Data Preprocessing and Ingredient Canonicalization
+The combinatorial structure of recipes encodes the culinary identity of regional traditions, yet the principles governing how ingredients are assembled into dishes remain incompletely understood. Here, we employ network analysis on RecipeDB, a large-scale structured repository of 118,083 recipes spanning 26 world cuisines and 6 continents, to characterize and compare the structural organization of ingredient combinations across global culinary traditions. Ingredients are classified into 22 functional categories (ingredient types), and each cuisine is represented as a weighted network in which nodes correspond to ingredient types and edges quantify the frequency of pairwise co-occurrence in recipes. We demonstrate that cuisines differ not only in the popularity of ingredient types and the distribution of recipe sizes, but also in the topological organization of ingredient-type combinations. Analysis of network backbones extracted via the disparity filter and maximum spanning trees (MSTs) reveals distinctive co-occurrence signatures that serve as culinary fingerprints. European cuisines typically distribute ingredients across multiple types, whereas Asian cuisines—particularly Indian cuisine—exhibit star-like topologies centred on a single dominant type such as Spice. The MSTs provide parsimonious yet representative skeletons that capture the hierarchical organization of each cuisine's ingredient-type architecture. Our findings, obtained on a dataset more than 2.5-fold larger than previously analysed corpora, confirm the robustness of network-based culinary characterization and reveal finer-grained distinctions among world cuisines, particularly within African, Latin American, and East Asian traditions.
 
-A rigorous multi-stage preprocessing pipeline was implemented to standardize the ingredient set, mitigate lexicographic noise, and reduce dimensional complexity while preserving the semantic integrity of the culinary data. The pipeline consisted of the following sequential stages:
+**Keywords:** culinary networks; ingredient combinations; food pairing; recipe analysis; network science; computational gastronomy
 
-### Stage 1: Schema Reduction and Deduplication
+---
 
-From the general metadata table, all columns not pertinent to the network construction—including caloric content, macronutrient profiles, preparation times, dietary flags, utensil listings, and processing annotations—were excised, retaining exclusively the recipe identifier, geographic region, sub-region, and continental affiliation. Duplicate recipe entries were subsequently removed. From the ingredient–flavor table, extraneous metadata fields (frequency counts, Wikipedia links, FlavorDB category designations, and DietRx linkage URLs) were discarded, preserving the ingredient identifier, raw ingredient name, canonical generic name, DietRx category, and FlavorDB link. From the ingredient–phrase table, all columns beyond the recipe number and ingredient identifier were eliminated, and entries lacking valid ingredient identifiers were excluded.
+## Introduction
 
-### Stage 2: Missing Value Imputation
+The transformation of raw ingredients into palatable sustenance is among the most ancient of human practices, with evidence for the controlled use of fire in food preparation dating back nearly 800,000 years [35, 36]. Throughout the millennia, recipes—structured templates guiding the preparation of meals using specific techniques and ingredients—have served as repositories of accumulated culinary knowledge [20]. Culinary traditions have undergone continuous refinement and expansion, reflecting the dynamic interplay of locally available ingredients with cultural influences, trade networks, technological advancements, and changing palates [24, 28]. As a result of this protracted process, specific recipes have become the backbone of diverse culinary traditions across the globe, and the study of their composition has emerged as a fertile domain for scientific inquiry.
 
-A small number of ingredient entries (*n* = 3) exhibited null values in the `generic_name` field. These were resolved by extracting the canonical name from the associated FlavorDB link string (e.g., `Vanilla~https://...` to "Vanilla"), thereby obviating the need for row deletion and preserving the completeness of the ingredient catalogue.
+The advent of large-scale digital recipe repositories and computational methods has catalysed a paradigm shift in the study of food and cuisine, giving rise to the interdisciplinary field of computational gastronomy [22]. Researchers have leveraged vast datasets of recipes to uncover latent patterns in culinary practices [22, 41, 42], employing tools from natural language processing, machine learning, and network science [10, 38] to analyse the composition and structure of recipes with unprecedented granularity. Applications range from automated recipe generation [43] and the extraction of ingredient lists from meal images to the examination of nutrient concentrations in food [44] and the investigation of dietary impacts on health [40]. These computational approaches have opened new avenues for understanding recipes not merely as cultural artefacts but as structured algorithms amenable to quantitative analysis [22].
 
-### Stage 3: Noise Remediation in Generic Names
+A foundational contribution to this field was the food pairing hypothesis, introduced by Blumenthal [37] and rigorously investigated by Ahn et al. [33], which posits that the compatibility of ingredients in recipes is governed by the degree to which they share flavour compounds. Bipartite networks connecting ingredients to their constituent flavour molecules revealed that Western cuisines tend to combine ingredients sharing many compounds (positive food pairing), suggesting a chemically driven principle of recipe construction. Subsequent work, however, demonstrated that this principle is far from universal: several Asian cuisines—most notably Indian cuisine—exhibit the opposite tendency, preferentially combining ingredients that share few flavour compounds [23, 27]. These findings underscore the complexity of culinary design and highlight the limitations of purely chemical-composition-based approaches, which, while pivotal for understanding the relationship between diet and health [40], often fail to capture the functional and cultural dimensions of ingredient usage.
 
-A subset of generic name entries was found to contain embedded URL fragments rather than valid ingredient labels. These anomalous entries were identified programmatically via substring matching on "http" and corrected by parsing the name component from the corresponding FlavorDB link field, followed by whitespace normalization and case standardization.
+Complex networks [10, 39] provide a natural mathematical framework for describing the combinatorial structure of recipes. Bipartite networks connecting recipes to their constituent ingredients can be projected onto ingredient–ingredient graphs that capture co-occurrence patterns [38]. However, such networks are often prohibitively large and heterogeneous across cuisines, complicating systematic cross-cultural comparisons. A crucial observation is that ingredients frequently serve similar functional roles within recipes—providing umami, acidity, aromatic complexity, or textural contrast—regardless of their specific chemical makeup [7]. Soy sauce in East Asian cuisine and fish sauce in Southeast Asian cuisine, for example, both function as salty umami enhancers; similarly, diverse fat sources such as oil, butter, and lard serve analogous roles as cooking media. This functional equivalence motivates a coarse-grained approach in which ingredients are grouped into broader categories based on their culinary role and biological origin.
 
-### Stage 4: Typographic Error Correction
+Caprioli et al. [7] introduced a network-based framework that operationalizes this insight by representing each cuisine as a weighted graph whose nodes correspond to ingredient types (macro-categories) and whose edges encode the frequency of pairwise co-occurrence in recipes. Applied to the CulinaryDB dataset comprising 45,661 recipes across 23 cuisines, this approach yielded interpretable "culinary fingerprints" that captured both universal patterns—such as the hierarchical organization of ingredient-type popularity—and cuisine-specific signatures, such as the star-like topology of the Indian cuisine network centred on Spice. Maximum spanning trees (MSTs) of these networks provided compact structural summaries, and Support Vector Machine (SVM) classifiers trained on network representations achieved high accuracy in identifying cuisines from subsets of recipes.
 
-A curated dictionary of 33 typographic mappings was manually compiled to rectify orthographic errors in the canonical ingredient names. Examples include: "asofoetida" to "asafoetida", "brocolli" to "broccoli", "jalepeno" to "jalapeno", "mozzarrella" to "mozzarella", and "vension" to "venison". All corrections were applied via exact string replacement to avoid unintended partial matches.
+In the present work, we apply and extend this network-based framework to a substantially larger and more geographically diverse dataset. Whereas the original study employed CulinaryDB, the present study draws upon RecipeDB [1, 2], a structured culinary repository curated by the Complex Systems Laboratory (CoSyLab) at the Indraprastha Institute of Information Technology Delhi (IIIT-Delhi). RecipeDB encompasses 118,083 recipes across 26 cuisines spanning 6 continents, aggregated from four prominent web-based platforms. The dataset employs a richer ingredient classification schema of 22 ingredient types (compared to 20 in CulinaryDB), incorporating additional categories—Condiment and Dish—that enable more granular differentiation of processed and composite food items.
 
-### Stage 5: Semantic Canonicalization
-
-The most substantive preprocessing step involved the systematic consolidation of ingredient entries that, while lexicographically distinct, serve equivalent or overlapping culinary functions. This canonicalization followed a principled set of rules:
-
-1. **Aggregation by Animal Species**: All anatomical cuts and preparations of a given animal were unified under a single species-level label. For instance, beef steak, beef brisket, beef tenderloin, beef sirloin, beef shank, beef oxtail, beef tongue, ground beef, and shredded beef were all mapped to "Beef". Analogous consolidations were performed for chicken (including chicken leg, chicken liver, white meat chicken), pork (including pork chop, pork tenderloin, pork belly, pork ribs, pork loin), and venison (remapped to "Deer Meat").
-
-2. **Unification of Dairy Subtypes**: All cheese varieties—encompassing cheddar, mozzarella, parmesan, blue cheese, goat cheese, cream cheese, cottage cheese, feta, and numerous others—were collapsed into a single "Cheese" category.
-
-3. **Consolidation of Fungal Varieties**: All mushroom cultivars and wild varieties (portobello, shiitake, chanterelle, enoki, oyster mushroom, etc.) were merged under "Mushroom".
-
-4. **Harmonization of Starch Products**: All pasta types (spaghetti, penne, fettuccine, lasagna, etc.) were grouped as "Pasta", while all noodle varieties (ramen, udon, rice noodle, egg noodle, etc.) were unified as "Noodle".
-
-5. **Standardization of Legume Preparations**: Pea variants—including snow pea, snap pea, English pea, split pea, black-eyed pea, and pigeon pea—were consolidated under "Pea".
-
-6. **Grouping by Transformative Process**: All bread types produced from cereal sources (white bread, rye bread, sourdough, pita, French bread, cornbread, etc.) were aggregated as "Bread". Similarly, all fermented grape-based beverages (red wine, white wine, port wine, marsala wine, etc.) were merged as "Wine".
-
-7. **Generalization of Ingredient Subtypes**: Specific cultivars or commercial variations were merged into their encompassing general class. For instance, cherry tomatoes, plum tomatoes, Roma tomatoes, grape tomatoes, and heirloom tomatoes were all grouped under "Tomato".
-
-### Stage 6: Category Normalization
-
-The DietRx category labels were standardized through a mapping schema that consolidated sub-categories into their parent classes. Notable consolidations include: all Additive sub-types (Additive-Salt, Additive-Sugar, Additive-Vinegar, Additive-Yeast) into "Additive"; Berry into "Fruit"; Gourd, Vegetable Fruit, and Vegetable Tuber into "Vegetable"; Fungi and Fungus into "Fungus"; Seed into "Nuts and Seeds"; Plant Derivative into "Plant"; and Beverage Caffeinated into "Beverage". This normalization yielded the final set of *T* = 22 ingredient types.
-
-### Stage 7: Relational Integration and Edge List Construction
-
-The three preprocessed tables were merged through a sequence of relational joins. The ingredient–phrase table was first joined with the ingredient–flavor table on the ingredient identifier, attaching to each recipe–ingredient pair its canonical name and category. Entries lacking a valid category assignment were discarded. The resulting intermediate table was then joined with the general metadata table on the recipe identifier, attaching the cuisine label. The final edge list, comprising 1,076,814 records with columns {recipe_id, aliased_ingredient_name, cuisine, category}, was deduplicated on the (recipe_id, aliased_ingredient_name) pair to ensure that each ingredient appears at most once per recipe. This edge list constitutes the foundational data structure from which all subsequent network analyses were derived.
-
-
-## Network Representations
-
-### Bipartite Recipe-Ingredient Graphs
-
-For each cuisine *c* (with *c* = 1, ..., 26), the edge list was used to construct a bipartite multigraph *G_c* = (*R_c* U *I_c*, *E_c*), where *R_c* denotes the set of recipe nodes (bipartite partition 0), *I_c* denotes the set of ingredient nodes (bipartite partition 1), and *E_c* is the set of edges connecting each recipe to its constituent ingredients. Each ingredient node *i* in *I_c* carries a node attribute recording its ingredient type *t_i*. The degree of a recipe node *r* in *R_c* in this bipartite graph directly corresponds to the recipe size *n_r* (i.e., the number of distinct ingredients in recipe *r*). The resulting per-cuisine bipartite graphs were serialized in GraphML format for interoperability and additionally persisted as a pickled Python dictionary for computational efficiency.
-
-### Ingredient-Type Co-occurrence Graphs
-
-To construct the ingredient-type graph for a cuisine *c*, we employed the following procedure, adapted from Caprioli et al. [7]. For each recipe *r* within the cuisine, we compiled the multiset of type pairs (*t_i*, *t_j*) for every unordered pair of ingredients *i*, *j* in *r*. We then computed the co-occurrence frequency *n*(*t_i*, *t_j*) of each type pair across all recipes. An undirected edge (*t_i*, *t_j*) was added to the ingredient-type network with edge weight *w(t_i, t_j)* set equal to the computed co-occurrence frequency. The network nodes were further enriched with a relative abundance attribute *v_t*, computed as the fraction of recipes containing at least one ingredient of type *t*.
-
-The resulting ingredient-type graphs are simple weighted graphs with *T* = 22 nodes each, enabling direct structural comparison across cuisines.
-
-### Network Backbone Extraction via Disparity Filter
-
-Due to the high density of the ingredient-type graphs (arising from the tendency of most type pairs to co-occur in at least some recipes), we applied the disparity filter method introduced by Serrano et al. [8] to extract statistically significant network backbones. For each node, this method tests whether the observed distribution of edge weights deviates significantly from a null model in which weights are uniformly distributed among the node's links. Edges whose weights represent statistically significant deviations (at a significance level alpha = 0.2) were retained, yielding sparser backbone networks that preserve the most informative structural features while suppressing noise.
-
-### Maximum Spanning Trees
-
-To further distil the essential topology of ingredient-type associations, we computed the Maximum Spanning Tree (MST) for each cuisine's ingredient-type graph using Kruskal's algorithm [9]. Prior to MST extraction, edge weights were normalized so that they summed to unity within each graph, ensuring scale-invariant comparisons across cuisines. The MST retains exactly *T* - 1 = 21 edges while maximizing the total edge weight, thereby yielding a connected tree that captures the most prominent type-type associations. MSTs serve as parsimonious "culinary fingerprints" that highlight the hierarchical organization of ingredient types within each cuisine [7, 10].
-
-
-## Statistical Analysis
-
-### Recipe Size Distribution
-
-For each cuisine, the recipe size *n_r* (number of distinct ingredients) was computed for every recipe. The resulting distributions were visualized as a ridge plot using kernel density estimation (KDE), with cuisines ordered by their mean recipe size. Each distribution was colour-coded according to the cuisine's continental affiliation.
-
-### Ingredient Popularity Profiles
-
-The *popularity* of an ingredient type *t* within a cuisine *c* was defined as the fraction of total ingredient occurrences belonging to type *t* across all recipes in *c*:
-
-> *f_c(t) = [sum over all recipes r in R_c of (sum over all ingredients i in r of delta(t_i, t))] / [sum over all recipes r in R_c of n_r]*
-
-where delta(a, b) denotes the Kronecker delta. These popularity values were assembled into a cuisine x type matrix and visualized as a heatmap, with rows corresponding to cuisines and columns to ingredient types. To emphasize inter-cuisine deviations from the global average, column-wise *z*-scores were computed:
-
-> *z_c(t) = [f_c(t) - mean(f(t))] / std(f(t))*
-
-where mean(f(t)) and std(f(t)) are the mean and standard deviation of the popularity of type *t* across all 26 cuisines. The *z*-score matrix was visualized using a diverging Red-Blue colour palette (RdBu) to highlight positive and negative deviations.
-
-### Edge Weight Z-scores
-
-For each unique edge (type pair) across all cuisine graphs, we compiled the vector of edge weights across the 26 cuisines (assigning zero weight where the edge was absent). The per-edge *z*-score for each cuisine was then computed as:
-
-> *z_c(e) = [w_c(e) - mean(w(e))] / std(w(e))*
-
-These scores were visualized as strip plots, with jittered data points for each cuisine and annotated highlights identifying the edges exhibiting the maximum and minimum *z*-scores per cuisine.
-
-### Top Co-occurrence Pairs
-
-For each cuisine, edges in the ingredient-type graph were ranked by weight. The top 5 and top 50 edges were identified, and their cumulative weight fractions (relative to the total graph weight) were computed. Additionally, the 10 type pairs with the highest average weight across all cuisines and the 10 type pairs with the highest weight variance were tabulated.
-
-
-## Implementation
-
-All analyses were implemented in Python 3 using the following principal libraries: pandas [11] for data manipulation, NumPy [12] for numerical computation, NetworkX [13] for graph construction and analysis, Matplotlib [14] and Seaborn [15] for visualization, SciPy [16] for statistical computations (z-score), and the backbone_network package [17] for disparity filter implementation. Maximum spanning tree layouts were rendered using PyGraphviz [18] with the `twopi` radial layout engine. Category-specific SVG icons were converted to raster format via CairoSVG [19] and overlaid on network visualizations using Matplotlib's AnnotationBbox facility.
+We implement a rigorous multi-stage preprocessing pipeline to standardize and canonicalize the ingredient set, construct per-cuisine bipartite recipe–ingredient graphs, derive weighted ingredient-type co-occurrence networks, and extract statistically significant backbone structures and MSTs. Through systematic analysis of recipe size distributions, ingredient-type popularity profiles, co-occurrence *z*-scores, and MST topologies, we demonstrate that the principal findings of Caprioli et al. [7] are robust to substantial changes in dataset provenance, scale, and classification schema. Moreover, the expanded geographic coverage—including cuisines such as Central American, Belgian, and sub-Saharan African that were absent from the earlier analysis—and the larger statistical base enable the identification of previously unreported culinary patterns and finer-grained distinctions among world cuisines.
 
 ---
 
@@ -157,7 +80,7 @@ The *z*-score bar charts for five selected cuisines (Northern Africa, US, Austra
 
 ### Backbone Networks
 
-We constructed the ingredient-type co-occurrence graphs for each of the 26 cuisines and applied the disparity filter with a significance threshold of alpha = 0.2 to extract the statistically significant backbones. The resulting backbone networks reveal substantial inter-cuisine variation in the density and structural organization of ingredient-type associations (Figure 3a-d).
+We constructed the ingredient-type co-occurrence graphs for each of the 26 cuisines and applied the disparity filter with a significance threshold of α = 0.2 to extract the statistically significant backbones. The resulting backbone networks reveal substantial inter-cuisine variation in the density and structural organization of ingredient-type associations (Figure 3a-d).
 
 The backbone networks of US and Italian cuisines retain a high percentage of their original edges, yielding dense graphs with broadly distributed connectivity. This structural density reflects the combinatorial richness of these cuisines, wherein a wide diversity of ingredient types are paired in numerous combinations. Both cuisines also exhibit broadly similar backbone architectures, consistent with the Mediterranean-influenced character of the American recipe canon and the global diffusion of Italian culinary practices.
 
@@ -227,6 +150,17 @@ The analyses presented above converge on a set of recurring geo-cultural pattern
 
 5. **African cuisines** (Northern Africa, Rest Africa) occupy an intermediate position in most analyses, with co-occurrence profiles reflecting both indigenous culinary traditions and historical exchange with Mediterranean and Middle Eastern food systems.
 
+
+## Identifying a Cuisine from a Set of Recipes
+
+*[This section will report the results of the SVM classification experiment. For each of the three input representations—ingredient-type frequency vectors, MSTs of ingredient-type networks, and full ingredient-type co-occurrence networks—the classification accuracy and corresponding confusion matrices will be presented. The analysis will evaluate how well each representation encodes the distinctive character of a cuisine, and whether network-based representations outperform frequency-based ones. To be completed upon implementation of the classification pipeline.]*
+
+
+## Classification and Clustering of World Cuisines
+
+*[This section will report the results of hierarchical clustering based on the weighted adjacency matrices of the ingredient-type networks, using average linkage and Jensen–Shannon distance. The resulting dendrogram and geographical mapping of culinary clusters will be presented, along with analysis of how ingredient-type networks group global cuisines into meaningful geo-cultural clusters. To be completed upon implementation of the clustering and world map visualization.]*
+
+
 ---
 
 # Discussion
@@ -262,6 +196,137 @@ Finally, the classification experiment conducted by Caprioli et al. [7]—in whi
 ### Concluding Remarks
 
 The present study confirms that the networks of ingredient-type combinations serve as effective "culinary fingerprints" capable of encoding the distinctive character of world cuisines. The remarkable consistency of our findings with those of Caprioli et al. [7]—despite substantial differences in dataset provenance, scale, and preprocessing—attests to the robustness and generality of the network-based framework. At the same time, the richer dataset employed here has enabled the identification of additional culinary patterns and distinctions, particularly among cuisines underrepresented in previous analyses. These results collectively demonstrate that the structural organization of ingredient combinations, rather than ingredient identity alone, constitutes a fundamental axis along which world cuisines differentiate and can be systematically characterized.
+
+---
+
+# Methods
+
+## Dataset
+
+The present study draws upon RecipeDB [1, 2], a large-scale structured repository of culinary data curated by the Complex Systems Laboratory (CoSyLab) at IIIT-Delhi. RecipeDB aggregates recipe information from four prominent web-based platforms—AllRecipes [3] (16,177 recipes), Food Network [4] (15,917 recipes), Epicurious [5] (11,069 recipes), and TarlaDalal [6] (2,609 recipes)—yielding a combined corpus of 118,083 recipes after inclusion of extended entries. The dataset encompasses three interlinked relational tables: (i) a *general metadata table* (`RecipeDB1_general.csv`) containing 118,083 recipes annotated with attributes including caloric content, preparation and cooking times, nutritional composition, dietary classifications, geographic region, sub-region, and continental affiliation; (ii) an *ingredient–phrase table* (`RecipeDB1_Ingredient_Phrases.csv`) comprising 1,154,404 ingredient-phrase entries that map each recipe to its constituent ingredients via standardized ingredient identifiers; and (iii) an *ingredient–flavour table* (`RecipeDB1_ingredient_flavor.csv`) cataloguing 19,019 unique ingredient entries, each annotated with a generic canonical name, a DietRx nutritional category, and a FlavorDB sensory link.
+
+Recipes in the dataset are organized into 26 regional cuisines spanning 6 continents (African, Asian, Australasian, European, Latin American, and North American), with 75 sub-regional designations capturing finer-grained geographic provenance. The 26 cuisines include: Australian, Belgian, Canadian, Caribbean, Central American, Chinese and Mongolian, Deutschland (German), Eastern European, French, Greek, Indian Subcontinent, Irish, Italian, Japanese, Korean, Mexican, Middle Eastern, Northern Africa, Rest Africa, Scandinavian, South American, Southeast Asian, Spanish and Portuguese, Thai, UK, and US. This geographic breadth, substantially exceeding the 23 cuisines analysed in Caprioli et al. [7], affords a more comprehensive cross-cultural comparison of culinary traditions.
+
+Each ingredient in the dataset is assigned to one of *T* = 22 culinary categories (hereafter referred to as *ingredient types*), namely: Additive, Bakery, Beverage, Beverage Alcoholic, Cereal, Condiment, Dairy, Dish, Essential Oil, Fish, Flower, Fruit, Fungus, Herb, Legume, Maize, Meat, Nuts and Seeds, Plant, Seafood, Spice, and Vegetable. This classification schema, inherited from the DietRx taxonomy within RecipeDB [1], follows a coherent set of principles grounded in biological origin, dominant culinary function, and degree of processing. Ingredients are primarily categorized by their natural source—for instance, Meat (terrestrial animal tissue), Fish (aquatic vertebrates), Seafood (aquatic invertebrates and marine organisms), and Plant (leaves, stems, and roots)—and secondarily by their prevailing culinary role, whereby aromatic leaves are designated as Herbs, flavouring seeds as Spices, and concentrated botanical extracts as Essential Oils. Items undergoing substantial transformation (e.g., Dairy, Bakery, Beverages) or employed predominantly as process aids (e.g., Additives) are assigned to dedicated classes. Notably, the present classification introduces two additional categories—Condiment and Dish—absent from the 20-type schema employed by Caprioli et al. [7], thereby enabling a more granular differentiation of processed and composite food items.
+
+
+## Data Preprocessing and Ingredient Canonicalization
+
+A rigorous multi-stage preprocessing pipeline was implemented to standardize the ingredient set, mitigate lexicographic noise, and reduce dimensional complexity while preserving the semantic integrity of the culinary data. The pipeline consisted of the following sequential stages:
+
+### Stage 1: Schema Reduction and Deduplication
+
+From the general metadata table, all columns not pertinent to the network construction—including caloric content, macronutrient profiles, preparation times, dietary flags, utensil listings, and processing annotations—were excised, retaining exclusively the recipe identifier, geographic region, sub-region, and continental affiliation. Duplicate recipe entries were subsequently removed. From the ingredient–flavour table, extraneous metadata fields (frequency counts, Wikipedia links, FlavorDB category designations, and DietRx linkage URLs) were discarded, preserving the ingredient identifier, raw ingredient name, canonical generic name, DietRx category, and FlavorDB link. From the ingredient–phrase table, all columns beyond the recipe number and ingredient identifier were eliminated, and entries lacking valid ingredient identifiers were excluded.
+
+### Stage 2: Missing Value Imputation
+
+A small number of ingredient entries (*n* = 3) exhibited null values in the `generic_name` field. These were resolved by extracting the canonical name from the associated FlavorDB link string (e.g., `Vanilla~https://...` → "Vanilla"), thereby obviating the need for row deletion and preserving the completeness of the ingredient catalogue.
+
+### Stage 3: Noise Remediation in Generic Names
+
+A subset of generic name entries was found to contain embedded URL fragments rather than valid ingredient labels. These anomalous entries were identified programmatically via substring matching on "http" and corrected by parsing the name component from the corresponding FlavorDB link field, followed by whitespace normalization and case standardization.
+
+### Stage 4: Typographic Error Correction
+
+A curated dictionary of 33 typographic mappings was manually compiled to rectify orthographic errors in the canonical ingredient names. Examples include: "asofoetida" → "asafoetida", "brocolli" → "broccoli", "jalepeno" → "jalapeno", "mozzarrella" → "mozzarella", and "vension" → "venison". All corrections were applied via exact string replacement to avoid unintended partial matches.
+
+### Stage 5: Semantic Canonicalization
+
+The most substantive preprocessing step involved the systematic consolidation of ingredient entries that, while lexicographically distinct, serve equivalent or overlapping culinary functions. This canonicalization followed a principled set of rules:
+
+1. **Aggregation by Animal Species**: All anatomical cuts and preparations of a given animal were unified under a single species-level label. For instance, beef steak, beef brisket, beef tenderloin, beef sirloin, beef shank, beef oxtail, beef tongue, ground beef, and shredded beef were all mapped to "Beef". Analogous consolidations were performed for chicken (including chicken leg, chicken liver, white meat chicken), pork (including pork chop, pork tenderloin, pork belly, pork ribs, pork loin), and venison (remapped to "Deer Meat").
+
+2. **Unification of Dairy Subtypes**: All cheese varieties—encompassing cheddar, mozzarella, parmesan, blue cheese, goat cheese, cream cheese, cottage cheese, feta, and numerous others—were collapsed into a single "Cheese" category.
+
+3. **Consolidation of Fungal Varieties**: All mushroom cultivars and wild varieties (portobello, shiitake, chanterelle, enoki, oyster mushroom, etc.) were merged under "Mushroom".
+
+4. **Harmonization of Starch Products**: All pasta types (spaghetti, penne, fettuccine, lasagna, etc.) were grouped as "Pasta", while all noodle varieties (ramen, udon, rice noodle, egg noodle, etc.) were unified as "Noodle".
+
+5. **Standardization of Legume Preparations**: Pea variants—including snow pea, snap pea, English pea, split pea, black-eyed pea, and pigeon pea—were consolidated under "Pea".
+
+6. **Grouping by Transformative Process**: All bread types produced from cereal sources (white bread, rye bread, sourdough, pita, French bread, cornbread, etc.) were aggregated as "Bread". Similarly, all fermented grape-based beverages (red wine, white wine, port wine, marsala wine, etc.) were merged as "Wine".
+
+7. **Generalization of Ingredient Subtypes**: Specific cultivars or commercial variations were merged into their encompassing general class. For instance, cherry tomatoes, plum tomatoes, Roma tomatoes, grape tomatoes, and heirloom tomatoes were all grouped under "Tomato".
+
+### Stage 6: Category Normalization
+
+The DietRx category labels were standardized through a mapping schema that consolidated sub-categories into their parent classes. Notable consolidations include: all Additive sub-types (Additive-Salt, Additive-Sugar, Additive-Vinegar, Additive-Yeast) into "Additive"; Berry into "Fruit"; Gourd, Vegetable Fruit, and Vegetable Tuber into "Vegetable"; Fungi and Fungus into "Fungus"; Seed into "Nuts and Seeds"; Plant Derivative into "Plant"; and Beverage Caffeinated into "Beverage". This normalization yielded the final set of *T* = 22 ingredient types.
+
+### Stage 7: Relational Integration and Edge List Construction
+
+The three preprocessed tables were merged through a sequence of relational joins. The ingredient–phrase table was first joined with the ingredient–flavour table on the ingredient identifier, attaching to each recipe–ingredient pair its canonical name and category. Entries lacking a valid category assignment were discarded. The resulting intermediate table was then joined with the general metadata table on the recipe identifier, attaching the cuisine label. The final edge list, comprising 1,076,814 records with columns {recipe_id, aliased_ingredient_name, cuisine, category}, was deduplicated on the (recipe_id, aliased_ingredient_name) pair to ensure that each ingredient appears at most once per recipe. This edge list constitutes the foundational data structure from which all subsequent network analyses were derived.
+
+
+## Network Representations
+
+For each cuisine *c* (with *c* = 1, …, 26), we denote as $\mathcal{R}_c$ the set of recipes and as $R_c = |\mathcal{R}_c|$ the number of recipes in cuisine *c*. Each recipe $r \in \mathcal{R}_c$ is a subset of the finite set of ingredients $\mathcal{I}_c$ used in cuisine *c*. We denote the number of ingredients in recipe *r* as $n_r$, the number of distinct ingredients in cuisine *c* as $I_c = |\mathcal{I}_c|$, an ingredient type as *t* (with *t* = 1, …, *T*), and the type of ingredient *i* as $t_i$.
+
+### Bipartite Recipe–Ingredient Graphs
+
+The edge list was used to construct a bipartite multigraph $G_c = (\mathcal{R}_c \cup \mathcal{I}_c, E_c)$, where $\mathcal{R}_c$ denotes the set of recipe nodes (bipartite partition 0), $\mathcal{I}_c$ denotes the set of ingredient nodes (bipartite partition 1), and $E_c$ is the set of edges connecting each recipe to its constituent ingredients. Each ingredient node *i* in $\mathcal{I}_c$ carries a node attribute recording its ingredient type $t_i$. The degree of a recipe node *r* in this bipartite graph directly corresponds to the recipe size $n_r$ (i.e., the number of distinct ingredients in recipe *r*). The resulting per-cuisine bipartite graphs were serialized in GraphML format for interoperability and additionally persisted as a pickled Python dictionary for computational efficiency.
+
+### Ingredient-Type Co-occurrence Graphs
+
+To construct the ingredient-type graph for a cuisine *c*, we employed the following procedure, adapted from Caprioli et al. [7]. For each recipe *r* within the cuisine, we compiled the multiset of type pairs $(t_i, t_j)$ for every unordered pair of ingredients *i*, *j* in *r*. We then computed the co-occurrence frequency $n(t_i, t_j)$ of each type pair across all recipes. An undirected edge $(t_i, t_j)$ was added to the ingredient-type network with edge weight $w_{t_i, t_j}$ set equal to the computed co-occurrence frequency. The network nodes were further enriched with a relative abundance attribute $v_t$, computed as the fraction of recipes containing at least one ingredient of type *t*:
+
+$$p_c(t) = \frac{\sum_{r \in \mathcal{R}_c} \mathbb{1}[\exists\, i \in r : t_i = t]}{R_c} \tag{1}$$
+
+where $\mathbb{1}[\cdot]$ denotes the indicator function.
+
+The resulting ingredient-type graphs are simple weighted graphs with *T* = 22 nodes each, enabling direct structural comparison across cuisines.
+
+### Network Backbone Extraction via Disparity Filter
+
+Due to the high density of the ingredient-type graphs (arising from the tendency of most type pairs to co-occur in at least some recipes), we applied the disparity filter method introduced by Serrano et al. [8] to extract statistically significant network backbones. For each node, this method tests whether the observed distribution of edge weights deviates significantly from a null model in which weights are uniformly distributed among the node's links. Edges whose weights represent statistically significant deviations (at a significance level α = 0.2) were retained, yielding sparser backbone networks that preserve the most informative structural features while suppressing noise.
+
+### Maximum Spanning Trees
+
+To further distil the essential topology of ingredient-type associations, we computed the Maximum Spanning Tree (MST) for each cuisine's ingredient-type graph using Kruskal's algorithm [9]. Prior to MST extraction, edge weights were normalized so that they summed to unity within each graph, ensuring scale-invariant comparisons across cuisines. The MST retains exactly *T* − 1 = 21 edges while maximizing the total edge weight, thereby yielding a connected tree that captures the most prominent type-type associations. MSTs serve as parsimonious "culinary fingerprints" that highlight the hierarchical organization of ingredient types within each cuisine [7, 10].
+
+
+## Statistical Analysis
+
+### Ingredient-Type Popularity
+
+The *popularity* of an ingredient type *t* within a cuisine *c* was defined as the fraction of total ingredient occurrences belonging to type *t* across all recipes in *c*:
+
+$$f_c(t) = \frac{\sum_{r \in \mathcal{R}_c} \sum_{i \in r} \delta(t_i,\, t)}{\sum_{r \in \mathcal{R}_c} n_r} \tag{2}$$
+
+where $\delta(a, b)$ denotes the Kronecker delta, which equals 1 if *a* = *b* and 0 otherwise. These popularity values were assembled into a cuisine × type matrix and visualized as a heatmap, with rows corresponding to cuisines and columns to ingredient types.
+
+### Popularity Z-scores
+
+To emphasize inter-cuisine deviations from the global average, column-wise *z*-scores were computed:
+
+$$z_c(t) = \frac{f_c(t) - \bar{f}(t)}{\sigma_f(t)} \tag{3}$$
+
+where $\bar{f}(t)$ and $\sigma_f(t)$ are the mean and standard deviation of the popularity of type *t* across all 26 cuisines, respectively. The *z*-score matrix was visualized using a diverging Red–Blue colour palette (RdBu) to highlight positive and negative deviations.
+
+### Edge Weight Z-scores
+
+For each unique edge (type pair) across all cuisine graphs, the vector of edge weights across the 26 cuisines was compiled (assigning zero weight where the edge was absent). The per-edge *z*-score for each cuisine was then computed as:
+
+$$z_c(e) = \frac{w_c(e) - \bar{w}(e)}{\sigma_w(e)} \tag{4}$$
+
+where $w_c(e)$ is the weight of edge *e* in cuisine *c*, and $\bar{w}(e)$ and $\sigma_w(e)$ are the mean and standard deviation of the weight of edge *e* across all cuisines. These scores were visualized as strip plots, with jittered data points for each cuisine and annotated highlights identifying the edges exhibiting the maximum and minimum *z*-scores per cuisine.
+
+### Recipe Size Distribution
+
+For each cuisine, the recipe size $n_r$ (number of distinct ingredients) was computed for every recipe. The resulting distributions were visualized as a ridge plot using kernel density estimation (KDE), with cuisines ordered by their mean recipe size. Each distribution was colour-coded according to the cuisine's continental affiliation.
+
+### Top Co-occurrence Pairs
+
+For each cuisine, edges in the ingredient-type graph were ranked by weight. The top 5 and top 50 edges were identified, and their cumulative weight fractions (relative to the total graph weight) were computed. Additionally, the 10 type pairs with the highest average weight across all cuisines and the 10 type pairs with the highest weight variance were tabulated.
+
+
+## Classification Experiment
+
+*[The classification framework of Caprioli et al. [7] will be replicated on the RecipeDB1 dataset. For each cuisine, 85% of recipes will be reserved for training and 15% for testing. For each of the three input representations—(i) ingredient-type frequency vectors, (ii) MSTs of ingredient-type networks, and (iii) full weighted adjacency matrices of ingredient-type networks—a Support Vector Machine (SVM) classifier will be trained to predict the cuisine label from a bootstrap sample of recipes. The experiment will be repeated over multiple iterations to assess classification stability. Performance will be evaluated in terms of average test accuracy, standard deviation, and per-cuisine confusion matrices. Hierarchical clustering of cuisines based on Jensen–Shannon divergence of the weighted adjacency matrices will also be performed, with the resulting dendrogram cut at an appropriate distance threshold to identify geo-cultural culinary groups. To be completed upon implementation.]*
+
+
+## Implementation
+
+All analyses were implemented in Python 3 using the following principal libraries: pandas [11] for data manipulation, NumPy [12] for numerical computation, NetworkX [13] for graph construction and analysis, Matplotlib [14] and Seaborn [15] for visualization, SciPy [16] for statistical computations (z-score), and the backbone_network package [17] for disparity filter implementation. Maximum spanning tree layouts were rendered using PyGraphviz [18] with the `twopi` radial layout engine. Category-specific SVG icons were converted to raster format via CairoSVG [19] and overlaid on network visualizations using Matplotlib's AnnotationBbox facility.
 
 ---
 
@@ -334,3 +399,23 @@ The present study confirms that the networks of ingredient-type combinations ser
 [33] Ahn, Y.-Y., Ahnert, S. E., Bagrow, J. P., and Barabasi, A.-L. Flavor network and the principles of food pairing. *Scientific Reports*, 1, 196 (2011).
 
 [34] Wu, Z., Pan, S., Chen, F., Long, G., Zhang, C., and Yu, P. S. A comprehensive survey on graph neural networks. *IEEE Transactions on Neural Networks and Learning Systems*, 32(1), 4-24 (2021).
+
+[35] Bottéro, J. The culinary tablets at Yale. *Journal of the American Oriental Society*, 107, 11-19 (1987).
+
+[36] Zohar, I., et al. Evidence for the cooking of fish 780,000 years ago at Gesher Benot Ya'aqov, Israel. *Nature Ecology and Evolution*, 6, 2016-2028 (2022).
+
+[37] Blumenthal, H. *The Big Fat Duck Cookbook*. Bloomsbury (2008).
+
+[38] Ahnert, S. E. Network analysis and data mining in food science: the emergence of computational gastronomy. *Flavour*, 2, 4 (2013).
+
+[39] Newman, M., Barabási, A., and Watts, D. *The Structure and Dynamics of Networks*. Princeton University Press (2006).
+
+[40] Barabási, A.-L., Menichetti, G., and Loscalzo, J. The unmapped chemical complexity of our diet. *Nature Food*, 1, 33-37 (2020).
+
+[41] Bagler, G. and Singh, N. Data-driven investigations of culinary patterns in traditional recipes across the world. In *2018 IEEE 34th International Conference on Data Engineering Workshops (ICDEW)*, 157-162 (2018).
+
+[42] Goel, M., et al. Ratatouille: A tool for novel recipe generation. In *2022 IEEE 38th International Conference on Data Engineering Workshops (ICDEW)*, 107-110 (2022).
+
+[43] Simas, T., Ficek, M., Diaz-Guilera, A., Obrador, P., and Rodriguez, P. R. Food-bridging: a new network construction to unveil the principles of cooking. *Frontiers in ICT*, 4, 14 (2017).
+
+[44] Menichetti, G. and Barabási, A.-L. Nutrient concentrations in food display universal behaviour. *Nature Food*, 3, 375-382 (2022).
